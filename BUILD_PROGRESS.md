@@ -5,7 +5,7 @@ Tracks each BUILD_PROMPTS.md prompt: status, verification result, commit, and an
 | # | Prompt | Status | Notes |
 |---|--------|--------|-------|
 | 0 | Project bootstrap + CLAUDE.md | done | `npm run verify` passes (typecheck, lint, 8 vitest tests, build). Next 16.3.8, shadcn radix-nova (23 components; `form.tsx` hand-written, registry no longer ships it), Supabase CLI 2.119.0 (devDep), `[auth] enable_signup = false`. Plan: prompts/enhanced/00-bootstrap.md |
-| 1 | Database schema + triggers | pending | |
+| 1 | Database schema + triggers | done | 2 migrations apply cleanly (`npm run db:reset`); pgTAP `npm run test:db` 113/113 pass (needs local Supabase; not in verify); `npm run verify` passes (18 vitest incl. SQL↔constants drift test). Extras for later prompts: `is_manager()` defined here, `move_prospect_stage` RPC (stage note), `prospects_with_flags` view, auth⇄public role sync. Plan: prompts/enhanced/01-schema.md |
 | 2 | Row Level Security | pending | |
 | 3 | Auth + app shell | pending | |
 | 4 | Org settings, time helpers, Team page | pending | |

@@ -54,11 +54,21 @@ supabase/tests/             database tests
 e2e/                        Playwright tests
 ```
 
+## Database (Prompt 1)
+
+- Migrations: `supabase/migrations/20261005120000_schema.sql` (enums, tables, indexes) and `..._functions_triggers.sql` (functions, triggers, view, RPC). After any schema change: `npm run db:reset && npm run db:types && npm run test:db`.
+- Functions use `set search_path = ''` and schema-qualified names; trigger functions writing other tables are `security definer`. `auth.uid()` is null for seed/system writes (owner change then allowed; `changed_by`/`user_id` null).
+- Derived/automatic columns (never write from the app): `prospects.follow_up_date` (min pending follow-up due date; direct edits are ignored), `last_activity_at` (activities trigger), `closed_at`, `created_by`, `updated_at`. Reopening (stage leaves closed) clears `close_reason/close_notes/closed_at` automatically.
+- Stage changes from the app go through the RPC `move_prospect_stage(p_prospect_id, p_to_stage, p_close_reason?, p_close_notes?, p_note?)` (security invoker); the note reaches `stage_history.note` and the `stage_change` activity via the tx-local setting `app.stage_change_note`. Triggers write `stage_history` + `stage_change`/`owner_change` activities; never insert those from the app.
+- Helpers: `is_manager()`, `org_today()`. View `prospects_with_flags` (security_invoker) adds `is_stale`, `has_overdue_follow_up`; it selects `p.*`, so recreate it when adding prospect columns.
+- Role sync: `auth.users.raw_app_meta_data.role` ⇄ `public.users.role` (triggers both ways). Last-manager guard raises `At least one manager must remain` (P0001). Non-manager reassignment raises 42501.
+
 ## Commands
 
 - `npm run dev` · `npm run build` · `npm run lint` · `npm run typecheck` · `npm run test` · `npm run e2e`
 - `npx supabase start|stop|status` (Docker) · `npm run db:reset` · `npm run db:types` (regenerates `src/lib/supabase/database.types.ts`)
 - `npm run verify` = typecheck && lint && test && build
+- `npm run test:db` = `supabase test db` (pgTAP files in `supabase/tests/*.test.sql`; needs the local stack running; **not** part of `verify`). Run it after every migration change.
 - Supabase CLI is a devDependency; always use `npx supabase` / npm scripts, never a global install.
 - Vitest runs `src/**/*.test.{ts,tsx}` (jsdom; `server-only` is stubbed). Playwright browsers: `npx playwright install chromium` before the first `npm run e2e`.
 - Env: copy `.env.example` → `.env.local` (values from `npx supabase status`). Never commit `.env*` files except `.env.example`.
