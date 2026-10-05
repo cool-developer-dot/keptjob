@@ -4,44 +4,10 @@
  * org timezone with its abbreviation, plus a relative time.
  */
 import { cn } from "cn";
-import {
-  ArrowRightIcon,
-  ArrowRightLeftIcon,
-  CalendarCheckIcon,
-  CirclePlusIcon,
-  MessagesSquareIcon,
-  PhoneIcon,
-  PresentationIcon,
-  SparklesIcon,
-  StickyNoteIcon,
-  UserRoundCogIcon,
-  type LucideIcon,
-} from "lucide-react";
 
-import { StageBadge } from "@/components/prospects/prospect-badges";
-import { Badge } from "@/components/ui/badge";
-import { ACTIVITY_TYPE_LABELS, DEAL_HEALTH_LABELS, type ActivityType } from "@/lib/constants";
-import { formatDateString, formatOrgDateTime, formatRelativeTime, timeZoneAbbreviation } from "@/lib/time";
+import { ACTIVITY_ICONS, ACTIVITY_TITLES, EntryDetail } from "@/components/timeline/activity-entry";
+import { formatOrgDateTime, formatRelativeTime, timeZoneAbbreviation } from "@/lib/time";
 import type { TimelineEntry } from "@/lib/timeline";
-
-const ICONS: Record<ActivityType | "created", LucideIcon> = {
-  call: PhoneIcon,
-  conversation: MessagesSquareIcon,
-  note: StickyNoteIcon,
-  demo: PresentationIcon,
-  follow_up: CalendarCheckIcon,
-  stage_change: ArrowRightLeftIcon,
-  owner_change: UserRoundCogIcon,
-  ai_insight: SparklesIcon,
-  created: CirclePlusIcon,
-};
-
-const TITLES: Record<ActivityType | "created", string> = {
-  ...ACTIVITY_TYPE_LABELS,
-  follow_up: "Completed follow-up",
-  ai_insight: "AI insight generated",
-  created: "Prospect created",
-};
 
 export function Timeline({ entries, timezone, now }: { entries: TimelineEntry[]; timezone: string; now: Date }) {
   if (entries.length === 0) {
@@ -67,7 +33,7 @@ function TimelineItem({
   now: Date;
   last: boolean;
 }) {
-  const Icon = ICONS[entry.type];
+  const Icon = ACTIVITY_ICONS[entry.type];
   const absolute = `${formatOrgDateTime(entry.at, timezone)} ${timeZoneAbbreviation(timezone, entry.at)}`;
   return (
     <li className="relative flex gap-3" data-activity-type={entry.type}>
@@ -83,7 +49,7 @@ function TimelineItem({
       </span>
       <div className="min-w-0 flex-1 space-y-1.5 pt-1">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm">
-          <span className="font-medium">{TITLES[entry.type]}</span>
+          <span className="font-medium">{ACTIVITY_TITLES[entry.type]}</span>
           <span className={cn("text-muted-foreground", entry.isSystem && "italic")}>by {entry.authorName}</span>
           <time dateTime={new Date(entry.at).toISOString()} title={absolute} className="text-xs text-muted-foreground">
             {absolute} · {formatRelativeTime(entry.at, now)}
@@ -96,54 +62,4 @@ function TimelineItem({
       </div>
     </li>
   );
-}
-
-function EntryDetail({ entry }: { entry: TimelineEntry }) {
-  const { detail } = entry;
-  switch (detail.kind) {
-    case "stage_change":
-      return (
-        <div className="flex flex-wrap items-center gap-1.5 text-sm">
-          {detail.from ? <StageBadge stage={detail.from} /> : <span className="text-muted-foreground">—</span>}
-          <ArrowRightIcon aria-label="to" className="size-3.5 text-muted-foreground" />
-          {detail.to ? <StageBadge stage={detail.to} /> : <span className="text-muted-foreground">—</span>}
-          {detail.closeReason && (
-            <span className="text-muted-foreground">
-              Reason: <span className="text-foreground">{detail.closeReason}</span>
-            </span>
-          )}
-        </div>
-      );
-    case "owner_change":
-      return (
-        <div className="flex flex-wrap items-center gap-1.5 text-sm">
-          <span>{detail.fromName ?? "—"}</span>
-          <ArrowRightIcon aria-label="to" className="size-3.5 text-muted-foreground" />
-          <span className="font-medium">{detail.toName ?? "—"}</span>
-        </div>
-      );
-    case "follow_up": {
-      const showTask = detail.task && detail.task !== entry.content;
-      if (!showTask && !detail.dueDate) return null;
-      return (
-        <p className="text-sm text-muted-foreground">
-          {showTask && <>Task: {detail.task}</>}
-          {showTask && detail.dueDate && " · "}
-          {detail.dueDate && <>Due {formatDateString(detail.dueDate)}</>}
-        </p>
-      );
-    }
-    case "ai_insight":
-      return detail.dealHealth ? (
-        <Badge variant="outline">Deal health: {DEAL_HEALTH_LABELS[detail.dealHealth]}</Badge>
-      ) : null;
-    case "created":
-      return (
-        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          Started in <StageBadge stage={detail.stage} />
-        </div>
-      );
-    default:
-      return null;
-  }
 }

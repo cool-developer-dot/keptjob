@@ -78,14 +78,14 @@ export type NeedsAttentionRow = {
   lastConversation: ConversationSnippet | null;
 };
 
-type SnippetRow = {
+export type SnippetRow = {
   type: ActivityType | null;
   snippet: string | null;
   content_length: number | null;
   occurred_at: string | null;
 };
 
-const SNIPPET_COLUMNS = "type, snippet, content_length, occurred_at";
+export const SNIPPET_COLUMNS = "type, snippet, content_length, occurred_at";
 
 const FOLLOW_UP_COLUMNS = `id, prospect_id, owner_id, due_date, note, status, completed_at, completed_by, created_at, bucket, prospect:prospects(id, name, company, stage, latest_conversation_activities(${SNIPPET_COLUMNS}))`;
 
@@ -95,7 +95,7 @@ const NEEDS_ATTENTION_COLUMNS = `id, name, company, stage, owner_id, follow_up_d
 const CLOSED_STAGE_LIST = `(${CLOSED_STAGES.join(",")})`;
 const NEEDS_ATTENTION_FILTER = "is_stale.is.true,follow_up_date.is.null";
 
-function toSnippet(rows: SnippetRow[] | SnippetRow | null | undefined): ConversationSnippet | null {
+export function toSnippet(rows: SnippetRow[] | SnippetRow | null | undefined): ConversationSnippet | null {
   const row = Array.isArray(rows) ? rows[0] : rows;
   if (!row?.type || row.snippet === null || !row.occurred_at) return null;
   return {
@@ -107,7 +107,7 @@ function toSnippet(rows: SnippetRow[] | SnippetRow | null | undefined): Conversa
 }
 
 /** Managers may filter by owner; reps are scoped by RLS (their owner param is ignored). */
-function effectiveOwner(ctx: DataContext, ownerId: string | null | undefined): string | null {
+export function effectiveOwner(ctx: DataContext, ownerId: string | null | undefined): string | null {
   return ctx.user.role === "manager" ? (ownerId ?? null) : null;
 }
 

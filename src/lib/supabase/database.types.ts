@@ -38,6 +38,12 @@ export type Database = {
       foreignKeyName: "activities_prospect_id_fkey"
       columns: ["prospect_id"]
 isOneToOne: false
+      referencedRelation: "deals_needing_attention"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "activities_prospect_id_fkey"
+      columns: ["prospect_id"]
+isOneToOne: false
       referencedRelation: "prospects"
       referencedColumns: ["id"]
     },{
@@ -70,6 +76,12 @@ isOneToOne: false
       columns: ["created_by"]
 isOneToOne: false
       referencedRelation: "users"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ai_insights_prospect_id_fkey"
+      columns: ["prospect_id"]
+isOneToOne: false
+      referencedRelation: "deals_needing_attention"
       referencedColumns: ["id"]
     },{
       foreignKeyName: "ai_insights_prospect_id_fkey"
@@ -113,6 +125,12 @@ isOneToOne: false
       columns: ["owner_id"]
 isOneToOne: false
       referencedRelation: "users"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "follow_ups_prospect_id_fkey"
+      columns: ["prospect_id"]
+isOneToOne: false
+      referencedRelation: "deals_needing_attention"
       referencedColumns: ["id"]
     },{
       foreignKeyName: "follow_ups_prospect_id_fkey"
@@ -193,6 +211,12 @@ isOneToOne: false
       foreignKeyName: "stage_history_prospect_id_fkey"
       columns: ["prospect_id"]
 isOneToOne: false
+      referencedRelation: "deals_needing_attention"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "stage_history_prospect_id_fkey"
+      columns: ["prospect_id"]
+isOneToOne: false
       referencedRelation: "prospects"
       referencedColumns: ["id"]
     },{
@@ -219,7 +243,20 @@ isOneToOne: false
                 }
           }
           Views: {
-            "follow_up_buckets": {
+            "deals_needing_attention": {
+                  Row: {
+                    "attention_rank": number | null,"company": string | null,"currency": string | null,"deal_value": number | null,"follow_up_date": string | null,"has_overdue_follow_up": boolean | null,"id": string | null,"is_stale": boolean | null,"last_activity_at": string | null,"low_health": boolean | null,"name": string | null,"no_follow_up": boolean | null,"owner_id": string | null,"stage": Database["public"]['Enums']["pipeline_stage"] | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "prospects_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "users"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"follow_up_buckets": {
                   Row: {
                     "bucket": string | null,"completed_at": string | null,"completed_by": string | null,"created_at": string | null,"created_by": string | null,"due_date": string | null,"id": string | null,"note": string | null,"owner_id": string | null,"prospect_id": string | null,"status": Database["public"]['Enums']["follow_up_status"] | null,"updated_at": string | null
                   }
@@ -246,6 +283,12 @@ isOneToOne: false
       foreignKeyName: "follow_ups_prospect_id_fkey"
       columns: ["prospect_id"]
 isOneToOne: false
+      referencedRelation: "deals_needing_attention"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "follow_ups_prospect_id_fkey"
+      columns: ["prospect_id"]
+isOneToOne: false
       referencedRelation: "prospects"
       referencedColumns: ["id"]
     },{
@@ -258,10 +301,16 @@ isOneToOne: false
                   ]
                 },"latest_ai_insights": {
                   Row: {
-                    "created_at": string | null,"deal_health": Database["public"]['Enums']["deal_health"] | null,"id": string | null,"prospect_id": string | null
+                    "created_at": string | null,"deal_health": Database["public"]['Enums']["deal_health"] | null,"id": string | null,"main_objection": string | null,"prospect_id": string | null,"recommended_next_step": string | null
                   }
                   Relationships: [
                     {
+      foreignKeyName: "ai_insights_prospect_id_fkey"
+      columns: ["prospect_id"]
+isOneToOne: false
+      referencedRelation: "deals_needing_attention"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "ai_insights_prospect_id_fkey"
       columns: ["prospect_id"]
 isOneToOne: false
@@ -281,6 +330,12 @@ isOneToOne: false
                   }
                   Relationships: [
                     {
+      foreignKeyName: "activities_prospect_id_fkey"
+      columns: ["prospect_id"]
+isOneToOne: false
+      referencedRelation: "deals_needing_attention"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "activities_prospect_id_fkey"
       columns: ["prospect_id"]
 isOneToOne: false
@@ -321,6 +376,11 @@ isOneToOne: false
                            },
 "can_access_prospect":
 { Args: { "p_prospect_id": string }; Returns: boolean
+                           },
+"closed_outcome_counts":
+{ Args: { "p_from": string,"p_owner_id"?: string,"p_to": string }; Returns: {
+              "lost": number,"won": number
+            }[]
                            },
 "follow_up_bucket":
 { Args: { "p_completed_at": string,"p_due_date": string,"p_now": string,"p_status": Database["public"]['Enums']["follow_up_status"],"p_timezone": string }; Returns: string
@@ -364,6 +424,11 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"open_pipeline_value":
+{ Args: { "p_owner_id"?: string }; Returns: {
+              "currency": string,"prospect_count": number,"total_value": number
+            }[]
+                           },
 "org_today":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
