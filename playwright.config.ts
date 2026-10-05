@@ -12,7 +12,14 @@ export default defineConfig({
     baseURL,
     trace: "on-first-retry",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium",
+      // PLAYWRIGHT_CHANNEL=chrome uses the locally installed Google Chrome
+      // instead of the downloaded Playwright Chromium.
+      use: { ...devices["Desktop Chrome"], channel: process.env.PLAYWRIGHT_CHANNEL || undefined },
+    },
+  ],
   webServer: {
     command: "npm run dev",
     url: baseURL,

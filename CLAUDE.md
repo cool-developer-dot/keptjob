@@ -74,6 +74,16 @@ e2e/                        Playwright tests
 - New public functions: `revoke execute ... from public, anon` and grant to `authenticated` only if callable from the app; new tables: enable RLS + explicit grants.
 - `prospects` is in the `supabase_realtime` publication (for Prompt 9).
 
+## Auth + app shell (Prompt 3)
+
+- `src/proxy.ts` → `updateSession()` + guards: signed out → `/login?next=…` (public: `/login`, `/forgot-password`, `/auth/confirm`); signed in on `/login`/`/forgot-password` → `/dashboard`; non-manager on `/settings*` → `/dashboard`. Path helpers + `safeNextPath()` (open-redirect guard; use it for any `next`/redirect param) live in `src/lib/safe-redirect.ts`.
+- `src/lib/auth.ts` (server-only): `getCurrentUser()` → `{ id, full_name, email, role } | null` (React `cache`, `getClaims()` + `public.users`; never `getSession()`), `requireUser()` (→ `/login`), `requireManager()` (rep → `/dashboard`). Every manager-only page/action calls `requireManager()` first; the proxy check is not enough.
+- Routes: `src/app/(auth)/` (centered card layout: login, forgot-password, set-password) and `src/app/(app)/` (shell layout: `requireUser()`, sidebar + header, mobile `Sheet`). New app pages go under `(app)/` and start with `<PageHeader title description />` (`src/components/app-shell/page-header.tsx`). Nav items: `src/components/app-shell/nav-items.ts` (`managerOnly` items are filtered out for reps, not hidden by CSS).
+- Auth actions in `src/server/actions/auth.ts` (`signIn`, `requestPasswordReset`, `setPassword`, `signOut`); they `redirect()` on success. Zod schemas in `src/lib/validation/auth.ts` (password min 8 = `minimum_password_length` in config.toml).
+- Email links: templates `supabase/templates/{invite,recovery}.html` use `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite|recovery`; `src/app/auth/confirm/route.ts` accepts only `invite`/`recovery`, `verifyOtp` → `/set-password`, failures → `/login?error=invalid_link`. `getSiteUrl()` (`src/lib/site-url.ts`) builds redirect URLs (`NEXT_PUBLIC_SITE_URL`, fallback request origin).
+- Seed users (`supabase/seed.sql`, fixed UUIDs `11111111-1111-4111-8111-00000000000{1,2,3}` = manager, rep Riley, rep Sam) — when seeding `auth.users` directly, also insert `auth.identities`, bcrypt passwords and `''` token columns. pgTAP tests must not assume they create the only manager (demote others in setup). Credentials are in README only.
+- E2E: `e2e/auth.spec.ts` (needs local Supabase + seed; reads `.env.local`; Mailpit API for emails). `PLAYWRIGHT_CHANNEL=chrome npm run e2e` uses installed Chrome.
+
 ## Commands
 
 - `npm run dev` · `npm run build` · `npm run lint` · `npm run typecheck` · `npm run test` · `npm run e2e`

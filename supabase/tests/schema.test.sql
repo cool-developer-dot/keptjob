@@ -81,6 +81,9 @@ insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data) values
   ('00000000-0000-0000-0000-0000000000b2', 'bea@example.com',  '{}',                   '{}'),
   ('00000000-0000-0000-0000-0000000000c1', 'xav@example.com',  '{}',                   '{"full_name":"Xav","role":"manager"}'),
   ('00000000-0000-0000-0000-0000000000c2', 'yan@example.com',  '{"role":"admin"}',     '{"full_name":"Yan"}');
+-- Make Mia the only manager (robust against seed data, e.g. the dev manager).
+update public.users set role = 'sales_rep'
+ where role = 'manager' and id <> '00000000-0000-0000-0000-0000000000a1';
 
 select results_eq(
   $$select role::text, full_name, email from public.users where id = '00000000-0000-0000-0000-0000000000a1'$$,
