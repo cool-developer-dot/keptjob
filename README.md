@@ -43,6 +43,7 @@ Public sign-up is disabled (`supabase/config.toml` → `[auth] enable_signup = f
 | `npm run lint` | ESLint |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run test` | Vitest unit tests (`src/**/*.test.ts(x)`) |
+| `npm run test:integration` | Data-layer tests against local Supabase with RLS (`tests/integration/`; needs the stack + seed; not part of `verify`) |
 | `npm run e2e` | Playwright tests in `e2e/` (needs local Supabase + seed; run `npx playwright install chromium` once, or set `PLAYWRIGHT_CHANNEL=chrome` to use installed Chrome) |
 | `npm run db:reset` | Recreate the local database from migrations + seed |
 | `npm run db:types` | Regenerate `src/lib/supabase/database.types.ts` from the local DB |

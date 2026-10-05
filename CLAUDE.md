@@ -47,7 +47,9 @@ src/lib/time.ts             org-timezone date helpers (Prompt 4)
 src/lib/validation/         Zod schemas
 src/lib/ai/                 OpenAI insight generation
 src/lib/supabase/           client.ts, server.ts, admin.ts (service role), middleware.ts (updateSession), database.types.ts (generated)
+src/server/data/            data functions (ctx, input) used by actions + integration tests
 src/server/actions/         server actions (ActionResult)
+tests/integration/          data layer vs local Supabase (npm run test:integration)
 supabase/config.toml        local Supabase config ([auth] enable_signup = false)
 supabase/migrations/        SQL migrations
 supabase/tests/             database tests
@@ -92,9 +94,24 @@ e2e/                        Playwright tests
 - Settings actions (`src/server/actions/settings.ts`): `updateOrgSettings`, `inviteUser` (requireManager → admin `inviteUserByEmail` + `updateUserById({ app_metadata: { role } })`, trigger syncs `public.users.role`; deletes the user if the role update fails), `changeUserRole` (user-scoped; P0001 → friendly last-manager message). Schemas in `src/lib/validation/settings.ts`.
 - Local `[auth.rate_limit] email_sent = 100` (invites + resets count). E2E `e2e/settings.spec.ts` creates `e2e-invite-*@example.com` users and deletes them; Playwright runs `workers: 1` (shared DB).
 
+## Data layer + server actions (Prompt 5)
+
+- **Layers:** schemas `src/lib/validation/{prospects,activities,follow-ups,demo,ai,common}.ts` (camelCase inputs; types `XInput = z.input`) → data functions `src/server/data/*.ts` (`server-only`, `fn(ctx, input)` with `ctx = { supabase (user-scoped), user: { id, role } }`; Zod-parse, map errors, return `ActionResult`; no `revalidatePath`/cookies → testable) → `"use server"` wrappers `src/server/actions/{prospects,activities,followUps,demo}.ts` (build ctx via `getActionContext()`/`getManagerActionContext()` in `helpers.ts`, then `revalidateProspect(id)` = /prospects, /prospects/[id], /pipeline, /follow-ups, /dashboard, /reports). "use server" files export only async functions; import schemas from `src/lib/validation`, never from action files. Errors: `dbErrorMessage()`/`dbFailure()`/`MESSAGES` in `src/server/data/errors.ts`.
+- **Action API** (all return `ActionResult<T>`; T is the row type from `database.types` unless noted):
+  - `createProspect({ name, company?, email?, phone?, decisionMakerStatus?, objections?, objectionNotes?, notes?, dealValue?, currency?, ownerId? })` — owner defaults to the current user (reps may only pass their own id), currency omitted → org default (DB trigger). Starts at stage `prospect`.
+  - `updateProspect({ prospectId, ...same editable fields })` — `strictObject`: stage/owner/close/demo/derived keys are rejected; `""`/null clears, omitted = unchanged.
+  - `moveProspectStage({ prospectId, toStage, closeReason?, closeNotes?, note? })` → `{ prospect, changed }` via RPC `move_prospect_stage` (note → stage_history + stage_change activity); same stage → `changed: false`; won/lost reason must match the target; open targets reject close fields (reopen clears them in the DB).
+  - `reassignProspect({ prospectId, ownerId })`, `deleteProspect({ prospectId })` — manager-only (`requireManager()` redirects reps; DB enforces too).
+  - `completeAllPendingFollowUps({ prospectId })` → `{ completed }` (close flow; one `follow_up` activity each).
+  - `addActivity({ prospectId, type: call|conversation|note|demo, content, occurredAt? })` — `occurredAt` ISO with offset (or Date), ≤ now + 5 min (`CLOCK_SKEW_MS`); client converts org-local input with `orgLocalToUtc`.
+  - `createFollowUp({ prospectId, dueDate, note })` (owner = prospect owner), `rescheduleFollowUp({ followUpId, dueDate })` (pending only), `completeFollowUp({ followUpId, note? })` (completed_by = user; activity content = note ?? task), `deleteFollowUp({ followUpId })` → `{ id, prospectId }`. `dueDate` = org-local `"YYYY-MM-DD"`.
+  - `setDemoDetails({ prospectId, demoDate, demoTime: "HH:mm", followUp?: { dueDate, note } })` → `{ prospect, followUp }` (org-local → UTC with the org timezone); `logDemoAttended({ prospectId, notes?, followUp? })` → `{ activity, followUp }` (demo activity; "Demo attended" if no notes). Neither changes the stage — call `moveProspectStage` first.
+  - `aiInsightOutputSchema` (`src/lib/validation/ai.ts`) for Prompt 11; org settings/invite schemas live in `validation/settings.ts`.
+- **Integration tests:** `npm run test:integration` (`tests/integration/*.test.ts`, `vitest.integration.config.mts`, node env) calls the data functions against local Supabase signed in as Riley (A), Sam (B) and Morgan (M); needs the stack + seed; **not** part of `verify`. Add a case there for every new data function. Tests clean up their `itest-*` prospects.
+
 ## Commands
 
-- `npm run dev` · `npm run build` · `npm run lint` · `npm run typecheck` · `npm run test` · `npm run e2e`
+- `npm run dev` · `npm run build` · `npm run lint` · `npm run typecheck` · `npm run test` · `npm run test:integration` (local Supabase; not in verify) · `npm run e2e`
 - `npx supabase start|stop|status` (Docker) · `npm run db:reset` · `npm run db:types` (regenerates `src/lib/supabase/database.types.ts`)
 - `npm run verify` = typecheck && lint && test && build
 - `npm run test:db` = `supabase test db` (pgTAP files in `supabase/tests/*.test.sql`; needs the local stack running; **not** part of `verify`). Run it after every migration change.
