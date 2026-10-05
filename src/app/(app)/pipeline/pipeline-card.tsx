@@ -4,19 +4,13 @@
  * the org tz), decision-maker, stale and latest AI deal-health badges, deal value.
  */
 import { cn } from "cn";
-import { CalendarClockIcon, SparklesIcon } from "lucide-react";
+import { CalendarClockIcon } from "lucide-react";
 
-import { FollowUpBadge, StaleBadge } from "@/components/prospects/prospect-badges";
+import { DealHealthBadge, FollowUpBadge, StaleBadge } from "@/components/prospects/prospect-badges";
 import { Badge } from "@/components/ui/badge";
-import { DEAL_HEALTH_LABELS, DECISION_MAKER_STATUS_LABELS, type DealHealth } from "@/lib/constants";
+import { DECISION_MAKER_STATUS_LABELS } from "@/lib/constants";
 import { formatMoney } from "@/lib/money";
 import { initials, type PipelineCard } from "@/lib/pipeline";
-
-const HEALTH_CLASSES: Record<DealHealth, string> = {
-  high: "border-transparent bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
-  medium: "border-transparent bg-amber-100 text-amber-900 dark:bg-amber-500/15 dark:text-amber-300",
-  low: "border-transparent bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300",
-};
 
 export function PipelineCardBody({
   card,
@@ -71,12 +65,7 @@ export function PipelineCardBody({
           DM: {DECISION_MAKER_STATUS_LABELS[card.decision_maker_status]}
         </Badge>
         {card.is_stale && <StaleBadge staleDays={staleDays} />}
-        {card.ai_health && (
-          <Badge className={HEALTH_CLASSES[card.ai_health]} title="Latest AI deal health">
-            <SparklesIcon aria-hidden />
-            AI: {DEAL_HEALTH_LABELS[card.ai_health]}
-          </Badge>
-        )}
+        {card.ai_health && <DealHealthBadge health={card.ai_health} prefix="AI" title="Latest AI deal health" />}
       </div>
 
       {card.deal_value !== null && (

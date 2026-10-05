@@ -27,5 +27,8 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    // Deterministic fake AI for e2e/ai-insights.spec.ts (dev server only; ignored
+    // in production builds). A reused server must be started with AI_FAKE=1 too.
+    env: { AI_FAKE: "1" },
   },
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { AI_SUMMARY_MAX, aiInsightOutputSchema } from "./ai";
+import { AI_NEXT_STEP_MAX, AI_OBJECTION_MAX, AI_SUMMARY_MAX, aiInsightOutputSchema, generateInsightSchema } from "./ai";
 
 const valid = {
   summary: "Interested, budget pending approval.",
@@ -22,5 +22,21 @@ describe("aiInsightOutputSchema", () => {
     const { recommended_next_step: _omit, ...missing } = valid;
     void _omit;
     expect(aiInsightOutputSchema.safeParse(missing).success).toBe(false);
+  });
+});
+
+describe("aiInsightOutputSchema bounds + generateInsightSchema", () => {
+  it("bounds main objection and next step", () => {
+    expect(aiInsightOutputSchema.safeParse({ ...valid, main_objection: "x".repeat(AI_OBJECTION_MAX + 1) }).success).toBe(false);
+    expect(
+      aiInsightOutputSchema.safeParse({ ...valid, recommended_next_step: "x".repeat(AI_NEXT_STEP_MAX + 1) }).success,
+    ).toBe(false);
+    expect(aiInsightOutputSchema.safeParse({ ...valid, summary: "x".repeat(AI_SUMMARY_MAX) }).success).toBe(true);
+  });
+
+  it("generateInsight takes a prospect uuid only", () => {
+    expect(generateInsightSchema.safeParse({ prospectId: "22222222-2222-4222-8222-000000000001" }).success).toBe(true);
+    expect(generateInsightSchema.safeParse({ prospectId: "nope" }).success).toBe(false);
+    expect(generateInsightSchema.safeParse({}).success).toBe(false);
   });
 });

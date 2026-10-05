@@ -66,7 +66,7 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
           <Suspense fallback={<FollowUpsPanelSkeleton />}>
             <FollowUpsSection ctx={ctx} prospectId={prospect.id} team={team} />
           </Suspense>
-          {/* Prompt 11: AI insights slot — replace the component in src/components/ai/ai-insights-card.tsx. */}
+          {/* AI insights (Prompt 11): streams its own data in <Suspense>. */}
           <AiInsightsCard prospectId={prospect.id} />
         </aside>
 

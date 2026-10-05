@@ -4,13 +4,15 @@
  * timezone explicitly (getOrgSettings() on the server, useOrgSettings() on the client).
  */
 import { cn } from "cn";
-import { AlertTriangleIcon, ClockIcon } from "lucide-react";
+import { AlertTriangleIcon, ClockIcon, SparklesIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
+  DEAL_HEALTH_LABELS,
   DECISION_MAKER_STATUS_LABELS,
   OBJECTION_LABELS,
   STAGE_LABELS,
+  type DealHealth,
   type DecisionMakerStatus,
   type ObjectionCategory,
   type PipelineStage,
@@ -129,5 +131,31 @@ export function DecisionMakerLabel({ status }: { status: DecisionMakerStatus }) 
     <span className={cn(status === "unknown" && "text-muted-foreground")}>
       {DECISION_MAKER_STATUS_LABELS[status]}
     </span>
+  );
+}
+
+const HEALTH_CLASSES: Record<DealHealth, string> = {
+  high: "border-transparent bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
+  medium: "border-transparent bg-amber-100 text-amber-900 dark:bg-amber-500/15 dark:text-amber-300",
+  low: "border-transparent bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300",
+};
+
+/** AI deal health pill (high green, medium amber, low red), e.g. "AI: High" on Kanban cards. */
+export function DealHealthBadge({
+  health,
+  prefix = "Deal health",
+  title,
+  className,
+}: {
+  health: DealHealth;
+  prefix?: string;
+  title?: string;
+  className?: string;
+}) {
+  return (
+    <Badge className={cn(HEALTH_CLASSES[health], className)} data-deal-health={health} title={title}>
+      <SparklesIcon aria-hidden />
+      {prefix}: {DEAL_HEALTH_LABELS[health]}
+    </Badge>
   );
 }

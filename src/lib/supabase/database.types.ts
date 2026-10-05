@@ -316,7 +316,10 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "can_access_prospect":
+            "ai_insight_recent_count":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
+"can_access_prospect":
 { Args: { "p_prospect_id": string }; Returns: boolean
                            },
 "follow_up_bucket":
@@ -364,6 +367,25 @@ isOneToOne: false
 "org_today":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
+"record_ai_insight":
+{ Args: { "p_deal_health": Database["public"]['Enums']["deal_health"],"p_decision_maker_status": Database["public"]['Enums']["decision_maker_status"],"p_main_objection": string,"p_model": string,"p_prospect_id": string,"p_recommended_next_step": string,"p_summary": string }; Returns: {
+              "created_at": string,
+"created_by": string | null,
+"deal_health": Database["public"]['Enums']["deal_health"],
+"decision_maker_status": Database["public"]['Enums']["decision_maker_status"],
+"id": string,
+"main_objection": string,
+"model": string,
+"prospect_id": string,
+"recommended_next_step": string,
+"summary": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "ai_insights"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "refresh_prospect_follow_up_date":
 { Args: { "p_prospect_id": string }; Returns: undefined
                            }

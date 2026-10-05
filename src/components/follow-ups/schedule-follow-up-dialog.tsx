@@ -8,6 +8,7 @@
  *
  *   const { openScheduleFollowUp, dialog } = useScheduleFollowUp();
  *   openScheduleFollowUp({ prospectId, prospectName }, { title: "Schedule next follow-up" });
+ *   openScheduleFollowUp(target, { title, defaultNote }); // AI "Create follow-up from next step"
  *   return <>{rows}{dialog}</>; // render {dialog} once, above rows that may unmount
  */
 import { useCallback, useState } from "react";
@@ -20,21 +21,25 @@ export type ScheduleFollowUpTarget = {
   prospectName: string;
 };
 
-type OpenState = ScheduleFollowUpTarget & { title: string; key: number };
+type OpenState = ScheduleFollowUpTarget & { title: string; defaultNote?: string; key: number };
 
 export function useScheduleFollowUp() {
   const [state, setState] = useState<OpenState | null>(null);
   const [open, setOpen] = useState(false);
 
-  const openScheduleFollowUp = useCallback((target: ScheduleFollowUpTarget, options: { title?: string } = {}) => {
-    // A fresh key per opening resets the form (new defaults, no stale input).
-    setState({
-      ...target,
-      title: options.title ?? "Schedule follow-up",
-      key: Date.now(),
-    });
-    setOpen(true);
-  }, []);
+  const openScheduleFollowUp = useCallback(
+    (target: ScheduleFollowUpTarget, options: { title?: string; defaultNote?: string } = {}) => {
+      // A fresh key per opening resets the form (new defaults, no stale input).
+      setState({
+        ...target,
+        title: options.title ?? "Schedule follow-up",
+        defaultNote: options.defaultNote,
+        key: Date.now(),
+      });
+      setOpen(true);
+    },
+    [],
+  );
 
   const close = useCallback(() => setOpen(false), []);
 
@@ -50,6 +55,7 @@ export function useScheduleFollowUp() {
             <FollowUpForm
               key={state.key}
               prospectId={state.prospectId}
+              defaultNote={state.defaultNote}
               submitLabel="Schedule follow-up"
               onDone={close}
               onCancel={close}
