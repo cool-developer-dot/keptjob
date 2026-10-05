@@ -219,7 +219,26 @@ isOneToOne: false
                 }
           }
           Views: {
-            "prospects_with_flags": {
+            "latest_ai_insights": {
+                  Row: {
+                    "created_at": string | null,"deal_health": Database["public"]['Enums']["deal_health"] | null,"id": string | null,"prospect_id": string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "ai_insights_prospect_id_fkey"
+      columns: ["prospect_id"]
+isOneToOne: false
+      referencedRelation: "prospects"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ai_insights_prospect_id_fkey"
+      columns: ["prospect_id"]
+isOneToOne: false
+      referencedRelation: "prospects_with_flags"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"prospects_with_flags": {
                   Row: {
                     "close_notes": string | null,"close_reason": string | null,"closed_at": string | null,"company": string | null,"created_at": string | null,"created_by": string | null,"currency": string | null,"deal_value": number | null,"decision_maker_status": Database["public"]['Enums']["decision_maker_status"] | null,"demo_at": string | null,"email": string | null,"follow_up_date": string | null,"has_overdue_follow_up": boolean | null,"id": string | null,"is_stale": boolean | null,"last_activity_at": string | null,"name": string | null,"notes": string | null,"objection_notes": string | null,"objections": (Database["public"]['Enums']["objection_category"])[] | null,"owner_id": string | null,"phone": string | null,"stage": Database["public"]['Enums']["pipeline_stage"] | null,"updated_at": string | null
                   }
