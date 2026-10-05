@@ -429,9 +429,76 @@ isOneToOne: false
               "currency": string,"prospect_count": number,"total_value": number
             }[]
                            },
+"org_period_bounds":
+{ Args: { "p_from": string,"p_to": string }; Returns: {
+              "end_at": string,"start_at": string
+            }[]
+                           },
 "org_today":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
+"prospects_closed_in_period":
+{ Args: { "p_from": string,"p_owner_id"?: string,"p_to": string }; Returns: {
+              "close_notes": string | null,
+"close_reason": string | null,
+"closed_at": string | null,
+"company": string | null,
+"created_at": string,
+"created_by": string | null,
+"currency": string,
+"deal_value": number | null,
+"decision_maker_status": Database["public"]['Enums']["decision_maker_status"],
+"demo_at": string | null,
+"email": string | null,
+"follow_up_date": string | null,
+"id": string,
+"last_activity_at": string,
+"name": string,
+"notes": string | null,
+"objection_notes": string | null,
+"objections": (Database["public"]['Enums']["objection_category"])[],
+"owner_id": string,
+"phone": string | null,
+"stage": Database["public"]['Enums']["pipeline_stage"],
+"updated_at": string
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "prospects"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
+"prospects_created_in_period":
+{ Args: { "p_from": string,"p_owner_id"?: string,"p_to": string }; Returns: {
+              "close_notes": string | null,
+"close_reason": string | null,
+"closed_at": string | null,
+"company": string | null,
+"created_at": string,
+"created_by": string | null,
+"currency": string,
+"deal_value": number | null,
+"decision_maker_status": Database["public"]['Enums']["decision_maker_status"],
+"demo_at": string | null,
+"email": string | null,
+"follow_up_date": string | null,
+"id": string,
+"last_activity_at": string,
+"name": string,
+"notes": string | null,
+"objection_notes": string | null,
+"objections": (Database["public"]['Enums']["objection_category"])[],
+"owner_id": string,
+"phone": string | null,
+"stage": Database["public"]['Enums']["pipeline_stage"],
+"updated_at": string
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "prospects"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
 "record_ai_insight":
 { Args: { "p_deal_health": Database["public"]['Enums']["deal_health"],"p_decision_maker_status": Database["public"]['Enums']["decision_maker_status"],"p_main_objection": string,"p_model": string,"p_prospect_id": string,"p_recommended_next_step": string,"p_summary": string }; Returns: {
               "created_at": string,
@@ -453,6 +520,39 @@ isOneToOne: false
       } },
 "refresh_prospect_follow_up_date":
 { Args: { "p_prospect_id": string }; Returns: undefined
+                           },
+"report_follow_ups":
+{ Args: { "p_from": string,"p_owner_id"?: string,"p_to": string }; Returns: {
+              "completed": number,"due_today": number,"overdue": number
+            }[]
+                           },
+"report_funnel":
+{ Args: { "p_from": string,"p_owner_id"?: string,"p_to": string }; Returns: {
+              "overall_conversion_pct": number,"prospect_count": number,"stage": Database["public"]['Enums']["pipeline_stage"],"step": number,"step_conversion_pct": number
+            }[]
+                           },
+"report_outcomes":
+{ Args: { "p_from": string,"p_owner_id"?: string,"p_to": string }; Returns: {
+              "lost": number,"lost_reasons": Json,"win_rate_pct": number,"won": number,"won_value": Json,"won_without_value": number
+            }[]
+                           },
+"report_pipeline_value":
+{ Args: { "p_owner_id"?: string }; Returns: {
+              "currency": string,"prospect_count": number,"total_value": number
+            }[]
+                           },
+"report_stage_counts":
+{ Args: { "p_owner_id"?: string }; Returns: {
+              "prospect_count": number,"stage": Database["public"]['Enums']["pipeline_stage"]
+            }[]
+                           },
+"report_stage_reached":
+{ Args: { "p_from": string,"p_owner_id"?: string,"p_to": string }; Returns: {
+              "prospect_count": number,"stage": Database["public"]['Enums']["pipeline_stage"],"stage_rank": number
+            }[]
+                           },
+"stage_funnel_rank":
+{ Args: { "p_stage": Database["public"]['Enums']["pipeline_stage"] }; Returns: number
                            }
           }
           Enums: {

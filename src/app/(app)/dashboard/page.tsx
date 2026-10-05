@@ -25,7 +25,7 @@ import { ContactTodayList } from "./contact-today";
 import { KpiTiles } from "./kpi-tiles";
 import { DashboardOwnerFilter } from "./owner-filter";
 import { RecentActivityFeed } from "./recent-activity";
-import { SectionCard } from "./section-card";
+import { SectionCard } from "@/components/section-card";
 import { KpiTilesSkeleton, SectionSkeleton } from "./skeletons";
 
 export const metadata: Metadata = { title: "Dashboard · AI Sales CRM" };

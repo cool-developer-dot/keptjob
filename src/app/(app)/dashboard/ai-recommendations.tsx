@@ -5,7 +5,7 @@ import { DealHealthBadge } from "@/components/prospects/prospect-badges";
 import { formatOrgDateTime, formatRelativeTime } from "@/lib/time";
 import type { AiRecommendationRow } from "@/server/data/dashboard";
 
-import { SectionEmpty } from "./section-card";
+import { SectionEmpty } from "@/components/section-card";
 
 /** Latest AI next step per open prospect, newest insights first (generated manually on the prospect page). */
 export function AiRecommendationsList({

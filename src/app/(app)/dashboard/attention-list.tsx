@@ -8,7 +8,7 @@ import { attentionReasonLabel, type AttentionReason } from "@/lib/dashboard";
 import { formatOrgDateTime, formatRelativeTime } from "@/lib/time";
 import type { AttentionDealRow } from "@/server/data/dashboard";
 
-import { SectionEmpty } from "./section-card";
+import { SectionEmpty } from "@/components/section-card";
 
 const REASON_CLASSES: Record<AttentionReason, string> = {
   overdue_follow_up: "border-transparent bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300",

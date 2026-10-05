@@ -10,7 +10,7 @@ import { formatDateString, formatOrgDateTime, type DateString } from "@/lib/time
 import type { ContactTodayRow } from "@/server/data/dashboard";
 
 import { ConversationSnippetText } from "../follow-ups/conversation-snippet";
-import { SectionEmpty } from "./section-card";
+import { SectionEmpty } from "@/components/section-card";
 
 /**
  * "Contact today" rows: who to contact (overdue + due today, most overdue

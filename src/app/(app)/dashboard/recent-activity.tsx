@@ -7,7 +7,7 @@ import { formatOrgDateTime, formatRelativeTime, timeZoneAbbreviation } from "@/l
 import { buildTimeline, type TimelineUser } from "@/lib/timeline";
 import type { RecentActivityRow } from "@/server/data/dashboard";
 
-import { SectionEmpty } from "./section-card";
+import { SectionEmpty } from "@/components/section-card";
 
 /** Last 15 activities on visible prospects, rendered like the prospect timeline (org-tz timestamps). */
 export function RecentActivityFeed({

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-/** Titled dashboard section; `id` names the region for assistive tech and tests. */
+/** Titled page section (dashboard, reports); `id` names the region for assistive tech and tests. */
 export function SectionCard({
   id,
   title,
