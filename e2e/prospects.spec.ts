@@ -1,6 +1,6 @@
 /**
  * Prospects list (Prompt 7). Needs local Supabase with the seed (`npm run db:reset`:
- * Riley owns Jordan Lee / Marcus Chen (stale) …, Sam owns Aisha Khan …) and
+ * Riley owns Jordan Lee / Marcus Chen (stale) …, Sam owns Aisha Khan …; 40 prospects in all) and
  * `.env.local`. Prospects created here are named `e2e-prospect-*` and deleted
  * afterwards with the service role.
  */
@@ -105,8 +105,11 @@ test("rep creates a prospect, then searches, filters and sorts", async ({ page }
 test("manager sees the team with owner column + filter; row click opens details", async ({ page }) => {
   await login(page, MANAGER);
   await expect(page.getByRole("columnheader", { name: "Owner" })).toBeVisible();
+  // The seed has 40 prospects (25 per page, most recently active first): page 1
+  // mixes both reps' deals; Aisha Khan (stale) is further down until filtered.
   await expect(rowLink(page, "Jordan Lee")).toBeVisible();
-  await expect(rowLink(page, "Aisha Khan")).toBeVisible();
+  await expect(table(page).getByRole("cell", { name: "Riley Rep", exact: true }).first()).toBeVisible();
+  await expect(table(page).getByRole("cell", { name: "Sam Rep", exact: true }).first()).toBeVisible();
 
   await page.getByRole("combobox", { name: "Owner" }).click();
   await page.getByRole("option", { name: "Sam Rep" }).click();

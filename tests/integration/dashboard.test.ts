@@ -281,51 +281,94 @@ describe("dashboard on the seed data", () => {
   });
 
   it("matches the documented seed numbers", async () => {
+    // Hand-computed from supabase/seed.sql (dates relative to now / org_today()).
     const riley = expectOk(await getDashboardKpisData(A, { today }));
-    expect(riley).toMatchObject({ openProspects: 4, dueToday: 1, overdue: 1, stale: 1 });
+    expect(riley).toMatchObject({ openProspects: 16, dueToday: 2, overdue: 3, stale: 2 });
     expect(riley.pipelineValue).toEqual({
-      totals: [{ currency: "USD", total: 23500, count: 3 }],
-      withoutValueCount: 1,
-      openCount: 4,
+      totals: [{ currency: "USD", total: 165700, count: 12 }],
+      withoutValueCount: 4,
+      openCount: 16,
     });
-    expect(riley.winRate).toMatchObject({ won: 1, lost: 0, rate: 1 });
+    expect(riley.winRate).toMatchObject({ won: 3, lost: 2, rate: 0.6 });
 
     const sam = expectOk(await getDashboardKpisData(B, { today }));
-    expect(sam).toMatchObject({ openProspects: 2, dueToday: 0, overdue: 1, stale: 1 });
-    expect(sam.pipelineValue.totals).toEqual([
-      { currency: "EUR", total: 4200, count: 1 },
-      { currency: "USD", total: 15000, count: 1 },
-    ]);
-    expect(sam.winRate).toMatchObject({ won: 0, lost: 1, rate: 0 });
+    expect(sam).toMatchObject({ openProspects: 13, dueToday: 2, overdue: 3, stale: 3 });
+    expect(sam.pipelineValue).toEqual({
+      totals: [
+        { currency: "EUR", total: 15200, count: 2 },
+        { currency: "USD", total: 93700, count: 9 },
+      ],
+      withoutValueCount: 2,
+      openCount: 13,
+    });
+    expect(sam.winRate).toMatchObject({ won: 3, lost: 3, rate: 0.5 });
 
     const team = expectOk(await getDashboardKpisData(M, { today }));
-    expect(team).toMatchObject({ openProspects: 6, dueToday: 1, overdue: 2, stale: 2 });
+    expect(team).toMatchObject({ openProspects: 29, dueToday: 4, overdue: 6, stale: 5 });
     expect(team.pipelineValue).toEqual({
       totals: [
-        { currency: "EUR", total: 4200, count: 1 },
-        { currency: "USD", total: 38500, count: 4 },
+        { currency: "EUR", total: 15200, count: 2 },
+        { currency: "USD", total: 259400, count: 21 },
       ],
-      withoutValueCount: 1,
-      openCount: 6,
+      withoutValueCount: 6,
+      openCount: 29,
     });
-    expect(team.winRate).toMatchObject({ won: 1, lost: 1, rate: 0.5 });
+    expect(team.winRate).toMatchObject({ won: 6, lost: 5, rate: 6 / 11 });
 
     const names = async (ctx: DataContext, ownerId?: string) =>
       expectOk(await listDealsNeedingAttentionData(ctx, { ownerId })).rows.map((row) => [row.name, row.reasons]);
     expect(await names(A)).toEqual([
+      ["James O'Connor", ["overdue_follow_up", "stale", "low_health"]],
+      ["Owen Fischer", ["overdue_follow_up"]],
       ["Jordan Lee", ["overdue_follow_up"]],
       ["Marcus Chen", ["stale", "no_follow_up"]],
+      ["Ethan Wright", ["no_follow_up"]],
     ]);
-    expect(await names(B)).toEqual([["Aisha Khan", ["overdue_follow_up", "stale"]]]);
-    expect((await names(M)).map(([name]) => name)).toEqual(["Aisha Khan", "Jordan Lee", "Marcus Chen"]);
+    expect(await names(B)).toEqual([
+      ["Kenji Tanaka", ["overdue_follow_up"]],
+      ["Aisha Khan", ["overdue_follow_up", "stale", "low_health"]],
+      ["Leah Cohen", ["overdue_follow_up", "stale"]],
+      ["Hiro Sato", ["stale", "no_follow_up"]],
+      ["Paul Schneider", ["no_follow_up"]],
+    ]);
+    // Same follow-up date → least recently active first (Aisha before James, Leah before Jordan).
+    expect((await names(M)).map(([name]) => name)).toEqual([
+      "Kenji Tanaka",
+      "Aisha Khan",
+      "James O'Connor",
+      "Owen Fischer",
+      "Leah Cohen",
+      "Jordan Lee",
+      "Marcus Chen",
+      "Hiro Sato",
+      "Ethan Wright",
+      "Paul Schneider",
+    ]);
 
     const contact = expectOk(await listContactTodayData(M));
     expect(contact.rows.map((row) => [row.prospect.name, row.bucket])).toEqual([
+      ["Kenji Tanaka", "overdue"],
       ["Aisha Khan", "overdue"],
+      ["James O'Connor", "overdue"],
+      ["Owen Fischer", "overdue"],
+      ["Leah Cohen", "overdue"],
       ["Jordan Lee", "overdue"],
+      ["Ahmed Saleh", "today"],
+      ["Grace Kim", "today"],
+      ["Fatima Haddad", "today"],
       ["Priya Shah", "today"],
     ]);
-    expect(contact.rows[1].prospect.objections).toEqual(["price"]);
+    expect(contact.rows[5].prospect.objections).toEqual(["price"]);
+    expect(contact.rows[1].aiNextStep).toMatchObject({ dealHealth: "low" });
+
+    const ai = expectOk(await listLatestAiRecommendationsData(M));
+    expect(ai.map((row) => row.nextStep)).toEqual([
+      "Confirm attendees and ask who signs off on the budget during the demo.",
+      "Send tiered volume pricing and propose a call with their finance lead.",
+      "Run the demo around their weekly sales meeting and send a proposal the same day.",
+      "Send a proposal with both pricing options before Friday.",
+      "Return the security questionnaire and propose two demo dates.",
+    ]);
   });
 
   it("rejects invalid input", async () => {
@@ -390,18 +433,20 @@ describe("dashboard with a fixture", () => {
   });
 
   it("reflects the fixture", async () => {
+    // Seed numbers (see above) + the fixture: 3 more open deals (USD 1,000, EUR 2,000, no value),
+    // one more overdue follow-up, one more loss in the window.
     const riley = expectOk(await getDashboardKpisData(A, { today }));
-    expect(riley).toMatchObject({ openProspects: 7, dueToday: 1, overdue: 2, stale: 1 });
+    expect(riley).toMatchObject({ openProspects: 19, dueToday: 2, overdue: 4, stale: 2 });
     expect(riley.pipelineValue).toEqual({
       totals: [
         { currency: "EUR", total: 2000, count: 1 },
-        { currency: "USD", total: 24500, count: 4 },
+        { currency: "USD", total: 166700, count: 13 },
       ],
-      withoutValueCount: 2,
-      openCount: 7,
+      withoutValueCount: 5,
+      openCount: 19,
     });
-    // Elena (won, seed) + the fixture loss; the 100-day-old win is outside the window.
-    expect(riley.winRate).toMatchObject({ won: 1, lost: 1, rate: 0.5 });
+    // Seed 3 won / 2 lost + the fixture loss; the 100-day-old win is outside the window.
+    expect(riley.winRate).toMatchObject({ won: 3, lost: 3, rate: 0.5 });
 
     const attention = expectOk(await listDealsNeedingAttentionData(A)).rows.map((row) => [
       row.name.replace(`${PREFIX} `, ""),
@@ -409,15 +454,24 @@ describe("dashboard with a fixture", () => {
     ]);
     expect(attention).toEqual([
       ["Overdue", ["overdue_follow_up", "low_health"]],
+      ["James O'Connor", ["overdue_follow_up", "stale", "low_health"]],
+      ["Owen Fischer", ["overdue_follow_up"]],
       ["Jordan Lee", ["overdue_follow_up"]],
       ["Marcus Chen", ["stale", "no_follow_up"]],
       ["Low health", ["low_health"]],
+      ["Ethan Wright", ["no_follow_up"]],
       ["No value", ["no_follow_up"]],
     ]);
 
     const ai = expectOk(await listLatestAiRecommendationsData(M));
-    // Newest first; the closed deal's insight and superseded insights are excluded.
-    expect(ai.map((row) => row.nextStep)).toEqual(["Share references", "Send contract", "Offer a pilot"]);
+    // Newest first; the closed deal's insight and superseded insights are excluded; then the seed's newest.
+    expect(ai.map((row) => row.nextStep)).toEqual([
+      "Share references",
+      "Send contract",
+      "Offer a pilot",
+      "Confirm attendees and ask who signs off on the budget during the demo.",
+      "Send tiered volume pricing and propose a call with their finance lead.",
+    ]);
 
     const contact = expectOk(await listContactTodayData(A));
     const first = contact.rows[0];
