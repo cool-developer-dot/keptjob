@@ -14,6 +14,7 @@ import { logDemoAttendedData, setDemoDetailsData } from "@/server/data/demo";
 import {
   completeAllPendingFollowUpsData,
   completeFollowUpData,
+  countPendingFollowUpsData,
   createFollowUpData,
   deleteFollowUpData,
   rescheduleFollowUpData,
@@ -284,13 +285,17 @@ describe("follow-ups", () => {
     expect(expectOk(await deleteFollowUpData(A, { followUpId: fu2.id })).prospectId).toBe(row.id);
   });
 
-  it("completeAllPendingFollowUps (close flow)", async () => {
+  it("countPendingFollowUps + completeAllPendingFollowUps (close flow)", async () => {
     const row = await newProspect(A, "complete all");
     for (const dueDate of ["2030-04-01", "2030-04-02"]) {
       expectOk(await createFollowUpData(A, { prospectId: row.id, dueDate, note: `task ${dueDate}` }));
     }
+    expect(expectOk(await countPendingFollowUpsData(A, { prospectId: row.id })).count).toBe(2);
+    expect(expectOk(await countPendingFollowUpsData(M, { prospectId: row.id })).count).toBe(2);
+    expectErr(await countPendingFollowUpsData(B, { prospectId: row.id }), /not found/i);
     expectErr(await completeAllPendingFollowUpsData(B, { prospectId: row.id }), /not found/i);
     expect(expectOk(await completeAllPendingFollowUpsData(A, { prospectId: row.id })).completed).toBe(2);
+    expect(expectOk(await countPendingFollowUpsData(A, { prospectId: row.id })).count).toBe(0);
     expect(expectOk(await completeAllPendingFollowUpsData(A, { prospectId: row.id })).completed).toBe(0);
     const { data: pending } = await A.supabase
       .from("follow_ups")

@@ -199,3 +199,32 @@ export async function deleteFollowUpData(
   if (!data || data.length === 0) return { ok: false, error: MESSAGES.followUpNotFound };
   return ok({ id: data[0].id, prospectId: data[0].prospect_id });
 }
+
+/**
+ * Number of pending follow-ups of a prospect the user can access (close dialog:
+ * "Mark N pending follow-ups as completed"). Not visible → not found.
+ */
+export async function countPendingFollowUpsData(
+  ctx: DataContext,
+  input: ProspectIdInput,
+): Promise<ActionResult<{ count: number }>> {
+  const parsed = prospectIdSchema.safeParse(input);
+  if (!parsed.success) return validationFailure(parsed.error);
+  const { prospectId } = parsed.data;
+
+  const { data: prospect, error: readError } = await ctx.supabase
+    .from("prospects")
+    .select("id")
+    .eq("id", prospectId)
+    .maybeSingle();
+  if (readError) return dbFailure("countPendingFollowUps (read)", readError, "Could not load the follow-ups.");
+  if (!prospect) return { ok: false, error: MESSAGES.prospectNotFound };
+
+  const { count, error } = await ctx.supabase
+    .from("follow_ups")
+    .select("id", { count: "exact", head: true })
+    .eq("prospect_id", prospectId)
+    .eq("status", "pending");
+  if (error) return dbFailure("countPendingFollowUps", error, "Could not load the follow-ups.");
+  return ok({ count: count ?? 0 });
+}

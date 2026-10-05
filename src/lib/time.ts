@@ -163,3 +163,24 @@ export function followUpBucket(
   if (dueDate <= addDaysToDateString(today, UPCOMING_DAYS)) return "upcoming";
   return "later";
 }
+
+/**
+ * Short label for the org timezone, e.g. "ET", "CT", "MT", "PT", "AKT", "MST"
+ * (Phoenix), "HST" — shown next to demo date/time inputs. Derived with Intl
+ * (generic name first, then the specific one, then the IANA id), never hardcoded.
+ */
+export function timeZoneAbbreviation(tz: string, at: Instant = new Date()): string {
+  assertTimeZone(tz);
+  const instant = toInstant(at);
+  for (const timeZoneName of ["shortGeneric", "short"] as const) {
+    try {
+      const part = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName })
+        .formatToParts(instant)
+        .find((p) => p.type === "timeZoneName")?.value;
+      if (part && !/^GMT[+-]/.test(part)) return part;
+    } catch {
+      // Older engines may not support "shortGeneric"; try the next option.
+    }
+  }
+  return tz;
+}

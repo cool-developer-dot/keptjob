@@ -13,6 +13,7 @@ import {
   isTimeString,
   orgLocalToUtc,
   orgToday,
+  timeZoneAbbreviation,
   toOrgDate,
   utcToOrgLocal,
 } from "./time";
@@ -196,5 +197,28 @@ describe("followUpBucket", () => {
 
   it("rejects malformed due dates", () => {
     expect(() => followUpBucket("10/06/2026", NY, now)).toThrow(RangeError);
+  });
+});
+
+describe("timeZoneAbbreviation", () => {
+  it("derives a short label for every allowed org timezone (winter and summer)", () => {
+    const expected: Record<string, string> = {
+      "America/New_York": "ET",
+      "America/Chicago": "CT",
+      "America/Denver": "MT",
+      "America/Phoenix": "MST",
+      "America/Los_Angeles": "PT",
+      "America/Anchorage": "AKT",
+      "Pacific/Honolulu": "HST",
+    };
+    for (const tz of ALLOWED_TIMEZONES) {
+      for (const at of ["2026-01-15T12:00:00Z", "2026-07-15T12:00:00Z"]) {
+        expect(timeZoneAbbreviation(tz, at)).toBe(expected[tz]);
+      }
+    }
+  });
+
+  it("rejects invalid zones", () => {
+    expect(() => timeZoneAbbreviation("Mars/Base")).toThrow(RangeError);
   });
 });

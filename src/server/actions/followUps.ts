@@ -6,10 +6,12 @@ import type {
   FollowUpIdInput,
   FollowUpRescheduleInput,
 } from "@/lib/validation/follow-ups";
+import type { ProspectIdInput } from "@/lib/validation/prospects";
 import type { FollowUpRow } from "@/server/data/context";
 import { MESSAGES } from "@/server/data/errors";
 import {
   completeFollowUpData,
+  countPendingFollowUpsData,
   createFollowUpData,
   deleteFollowUpData,
   rescheduleFollowUpData,
@@ -54,4 +56,11 @@ export async function deleteFollowUp(
   const result = await deleteFollowUpData(ctx, input);
   if (result.ok) revalidateProspect(result.data.prospectId);
   return result;
+}
+
+/** Read: pending follow-up count of a prospect (close dialog offer). No revalidation. */
+export async function getPendingFollowUpCount(input: ProspectIdInput): Promise<ActionResult<{ count: number }>> {
+  const ctx = await getActionContext();
+  if (!ctx) return { ok: false, error: MESSAGES.sessionExpired };
+  return countPendingFollowUpsData(ctx, input);
 }

@@ -109,6 +109,20 @@ e2e/                        Playwright tests
   - `aiInsightOutputSchema` (`src/lib/validation/ai.ts`) for Prompt 11; org settings/invite schemas live in `validation/settings.ts`.
 - **Integration tests:** `npm run test:integration` (`tests/integration/*.test.ts`, `vitest.integration.config.mts`, node env) calls the data functions against local Supabase signed in as Riley (A), Sam (B) and Morgan (M); needs the stack + seed; **not** part of `verify`. Add a case there for every new data function. Tests clean up their `itest-*` prospects.
 
+## Stage-change workflow (Prompt 6)
+
+- **Every UI stage change goes through `useStageChange()`** (`src/components/stage-change/useStageChange.tsx`); never call `moveProspectStage` directly from a stage control. Usage:
+  ```tsx
+  const { requestStageChange, dialog, isBusy } = useStageChange();
+  const result = await requestStageChange(prospect /* { id, name, stage, demo_at? } */, toStage, { pendingFollowUps? });
+  // "moved" | "unchanged" (same stage / already there) | "cancelled" (dialog dismissed, nothing written) | "failed" (immediate move failed, toast shown)
+  return <>{/* … */}{dialog}</>; // render {dialog} once
+  ```
+  Kanban: apply the move optimistically, then roll back unless the result is `"moved"`/`"unchanged"`. Needs `OrgSettingsProvider` (the `(app)` layout). Toasts are shown by the hook.
+- Rules live in the pure `decideStageFlow(from, to, pendingFollowUps)` (`src/lib/workflow.ts`): same stage → noop; → `demo_booked` / `demo_attended` → dialog (Save / Skip / Cancel) from any direction; → `closed_won`/`closed_lost` (incl. won ↔ lost) → close dialog (reason required, Save disabled until chosen; "Mark N pending follow-ups as completed" only when N > 0, checked by default; no Skip); everything else (forward/backward/skip/reopen) → immediate. For close targets the hook fetches N with `getPendingFollowUpCount` unless passed.
+- Save order: `moveProspectStage` first, then `setDemoDetails` / `logDemoAttended` / `completeAllPendingFollowUps`. Move fails → error toast, dialog stays open. Extra fails → error toast but the result is still `"moved"`.
+- Defaults: demo follow-up due = demo date + 1 (follows the demo date until edited), demo-attended follow-up = org today + 2, note "Follow up after demo"; existing `demo_at` is prefilled. Time labels use `timeZoneAbbreviation(tz)` (Intl, e.g. "ET"). `StageChangeDialog` is presentational (props `request/timezone/saving/onSubmit/onCancel`); form schemas + mappers to action inputs are in `src/lib/validation/stage-change.ts`.
+
 ## Commands
 
 - `npm run dev` · `npm run build` · `npm run lint` · `npm run typecheck` · `npm run test` · `npm run test:integration` (local Supabase; not in verify) · `npm run e2e`
