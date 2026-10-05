@@ -84,6 +84,14 @@ e2e/                        Playwright tests
 - Seed users (`supabase/seed.sql`, fixed UUIDs `11111111-1111-4111-8111-00000000000{1,2,3}` = manager, rep Riley, rep Sam) — when seeding `auth.users` directly, also insert `auth.identities`, bcrypt passwords and `''` token columns. pgTAP tests must not assume they create the only manager (demote others in setup). Credentials are in README only.
 - E2E: `e2e/auth.spec.ts` (needs local Supabase + seed; reads `.env.local`; Mailpit API for emails). `PLAYWRIGHT_CHANNEL=chrome npm run e2e` uses installed Chrome.
 
+## Org settings, time, money, Team (Prompt 4)
+
+- **Time (`src/lib/time.ts`, pure, @date-fns/tz):** calendar dates are `"YYYY-MM-DD"` strings (`DateString`, = Postgres `date` / `org_today()`); instants are `Date | ISO string`. `orgToday(tz, now?)`, `toOrgDate(utc, tz)`, `formatOrgDateTime(utc, tz, pattern?)`, `formatOrgDate(utc, tz)`, `formatDateString(date)` (no tz shift — use for `due_date`), `orgLocalToUtc(date, "HH:mm", tz)` (demo entry; DST gap → shifted forward, ambiguous → earlier), `utcToOrgLocal(utc, tz)` (prefill inputs), `addDaysToDateString`, `isDateString/isTimeString`, `followUpBucket(dueDate, tz, now?)` → `overdue` (< today) / `today` / `upcoming` (today+1…today+`UPCOMING_DAYS`=7) / `later` — pending follow-ups only. Invalid input throws `RangeError`. Never use `new Date().getDate()`/`toLocaleDateString()` for app dates.
+- **Org settings:** server `getOrgSettings()` (`src/lib/org.ts`, React `cache`, user-scoped) → `{ defaultCurrency, timezone, staleDays }`; client `useOrgSettings()` (`src/components/org-settings-provider.tsx`, provided by the `(app)` layout). Type + `DEFAULT_ORG_SETTINGS` in `src/lib/org-settings.ts` (client-safe). New prospects take `defaultCurrency`.
+- **Money:** `formatMoney(value, currency, { compact? })` (`src/lib/money.ts`; accepts numeric strings, null → "—"); never sum across currencies. `COMMON_CURRENCIES`, `isSupportedCurrency()`.
+- Settings actions (`src/server/actions/settings.ts`): `updateOrgSettings`, `inviteUser` (requireManager → admin `inviteUserByEmail` + `updateUserById({ app_metadata: { role } })`, trigger syncs `public.users.role`; deletes the user if the role update fails), `changeUserRole` (user-scoped; P0001 → friendly last-manager message). Schemas in `src/lib/validation/settings.ts`.
+- Local `[auth.rate_limit] email_sent = 100` (invites + resets count). E2E `e2e/settings.spec.ts` creates `e2e-invite-*@example.com` users and deletes them; Playwright runs `workers: 1` (shared DB).
+
 ## Commands
 
 - `npm run dev` · `npm run build` · `npm run lint` · `npm run typecheck` · `npm run test` · `npm run e2e`
