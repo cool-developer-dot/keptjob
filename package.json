@@ -14,7 +14,8 @@
     "db:reset": "supabase db reset",
     "test:db": "supabase test db",
     "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts",
-    "verify": "npm run typecheck && npm run lint && npm run test && npm run build"
+    "verify": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "create-manager": "node scripts/create-manager.mts"
   },
   "dependencies": {
     "@date-fns/tz": "^1.5.0",

@@ -201,9 +201,17 @@ e2e/                        Playwright tests
 - Seed invariants tests rely on: prospects 01–08 keep name/owner/stage/value and last-activity age (Jordan 2 d, Marcus 30 d = Riley's least recently active open deal, Aisha 20 d stale, …); Riley's overdue follow-ups ≤ 4 days overdue (dashboard e2e uses −5 d); Morgan owns nothing. **Literal seed numbers** live in `tests/integration/follow-ups.test.ts` and `tests/integration/dashboard.test.ts` ("documented seed numbers" + fixture) — update them deliberately (hand-computed) when the seed changes; everything else compares with hand-written SQL or is seed-relative. The seed is relative to the time it ran: re-run `npm run db:reset` before integration tests on a later day.
 - **E2E** `e2e/journey.spec.ts`: rep journey (create → call → fake AI insight → keyboard drag to Demo Booked (dialog) → Demo Attended (notes + follow-up due today) → Closed Won (Save disabled until a reason; "Mark N pending follow-ups" unchecked) → complete the follow-up on /follow-ups → dashboard open/due-today/won deltas), rep B 404, manager reassign (owner_change, follow-ups move, old owner 404), org timezone change moves follow-ups between buckets (server clock can't be frozen: the fixture is built from the current instant so a change is guaranteed at any hour — Today→Upcoming in the 00:00–05/06:00 ET window, otherwise the 30-day Completed edge; expectations via `followUpViewBucket()`; timezone restored in `finally` + `afterAll`), invite dialog + invalid invite link. Helpers are per spec (login, keyboard drag); service-role inserts with several rows need the same keys on every row.
 
+## Deploy (Prompt 15)
+
+- Runbook (GitHub → Supabase cloud → Vercel → smoke test, which env var goes where, Auth settings, templates, SMTP): `prompts/enhanced/15-deploy.md` Part B. Cloud steps need the user's go-ahead (accounts/credentials) — never create repos, push, link/`db push`, or deploy on your own. Never `db push --include-seed` (seed has known passwords).
+- `scripts/create-manager.mts` (`npm run create-manager -- --email … --name … [--dotenv <file>] [--link] [--yes]`): standalone (Node 22 type stripping; no `@/` imports, `.mts` so Node treats it as ESM; flag is `--dotenv` because Node itself grabs `--env-file`). Invite email by default, `--link` prints a one-time `token_hash` link; idempotent (promotes existing users via `app_metadata.role`); never handles passwords.
+- `next.config.ts` sets security headers (X-Frame-Options DENY, `frame-ancestors 'none'`, nosniff, Referrer-Policy, Permissions-Policy, HSTS) + `poweredByHeader: false`. No full CSP (Next inline scripts would need nonces). No `vercel.json`.
+- CI: `.github/workflows/ci.yml` — `verify` job + a job with local Supabase in Docker running `test:db`, `test:integration`, `e2e` (writes `.env.local` from `supabase status -o env`).
+
 ## Commands
 
 - `npm run dev` · `npm run build` · `npm run lint` · `npm run typecheck` · `npm run test` · `npm run test:integration` (local Supabase; not in verify) · `npm run e2e`
+- `npm run create-manager -- --email … --name …` (first manager; see Deploy)
 - `npx supabase start|stop|status` (Docker) · `npm run db:reset` · `npm run db:types` (regenerates `src/lib/supabase/database.types.ts`)
 - `npm run verify` = typecheck && lint && test && build
 - `npm run test:db` = `supabase test db` (pgTAP files in `supabase/tests/*.test.sql`; needs the local stack running; **not** part of `verify`). Run it after every migration change.
