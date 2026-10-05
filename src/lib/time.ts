@@ -14,7 +14,7 @@
  * - Instant: a `Date` or an ISO timestamp string (Supabase `timestamptz`).
  */
 import { TZDate } from "@date-fns/tz";
-import { format } from "date-fns";
+import { format, formatDistanceStrict } from "date-fns";
 
 export type DateString = string;
 export type TimeString = string;
@@ -183,4 +183,16 @@ export function timeZoneAbbreviation(tz: string, at: Instant = new Date()): stri
     }
   }
   return tz;
+}
+
+/**
+ * Relative time from `now`, e.g. "just now", "5 minutes ago", "3 days ago",
+ * "in 2 hours" (a duration, so no timezone involved). Use it for "last
+ * activity"; show the absolute org-tz time (formatOrgDateTime) in a title.
+ */
+export function formatRelativeTime(utc: Instant, now: Instant = new Date()): string {
+  const at = toInstant(utc);
+  const ref = toInstant(now);
+  if (Math.abs(ref.getTime() - at.getTime()) < 60_000) return "just now";
+  return formatDistanceStrict(at, ref, { addSuffix: true, roundingMethod: "floor" });
 }

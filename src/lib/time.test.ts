@@ -9,6 +9,7 @@ import {
   formatDateString,
   formatOrgDate,
   formatOrgDateTime,
+  formatRelativeTime,
   isDateString,
   isTimeString,
   orgLocalToUtc,
@@ -220,5 +221,20 @@ describe("timeZoneAbbreviation", () => {
 
   it("rejects invalid zones", () => {
     expect(() => timeZoneAbbreviation("Mars/Base")).toThrow(RangeError);
+  });
+});
+
+describe("formatRelativeTime", () => {
+  const now = new Date("2026-10-06T15:00:00Z");
+  it("formats past and future durations", () => {
+    expect(formatRelativeTime("2026-10-06T14:59:30Z", now)).toBe("just now");
+    expect(formatRelativeTime("2026-10-06T14:55:00Z", now)).toBe("5 minutes ago");
+    expect(formatRelativeTime("2026-10-06T12:10:00Z", now)).toBe("2 hours ago");
+    expect(formatRelativeTime("2026-10-03T15:00:00Z", now)).toBe("3 days ago");
+    expect(formatRelativeTime("2026-08-01T15:00:00Z", now)).toBe("2 months ago");
+    expect(formatRelativeTime("2026-10-06T17:00:00Z", now)).toBe("in 2 hours");
+  });
+  it("rejects invalid timestamps", () => {
+    expect(() => formatRelativeTime("nope", now)).toThrow(RangeError);
   });
 });
