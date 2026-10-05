@@ -63,6 +63,17 @@ e2e/                        Playwright tests
 - Helpers: `is_manager()`, `org_today()`. View `prospects_with_flags` (security_invoker) adds `is_stale`, `has_overdue_follow_up`; it selects `p.*`, so recreate it when adding prospect columns.
 - Role sync: `auth.users.raw_app_meta_data.role` ⇄ `public.users.role` (triggers both ways). Last-manager guard raises `At least one manager must remain` (P0001). Non-manager reassignment raises 42501.
 
+## Row Level Security (Prompt 2)
+
+- Migration `supabase/migrations/20261006120000_rls.sql`; tests `supabase/tests/rls.test.sql` (pgTAP, run as `authenticated` with `request.jwt.claims`).
+- RLS on every public table. Reps: own prospects + child rows; managers: everything. Policies only call security-definer helpers `is_manager()` / `can_access_prospect(prospect_id)` (no recursion).
+- Grants are tight: `anon` has nothing; `authenticated` gets only what policies need, with **column-level** insert/update grants. Writing a non-granted column fails with 42501. Not writable from the app: `prospects.follow_up_date/last_activity_at/closed_at/created_by/created_at/updated_at`, `follow_ups.owner_id/prospect_id` on update, `created_at` on activities/ai_insights, `users.email`, `org_settings.updated_by`. Don't send these in `.update()/.insert()` payloads.
+- Append-only: no update/delete grants on `activities`, `stage_history`, `ai_insights`; no insert on `stage_history`, `users`, `org_settings`. Activity inserts need `user_id = auth.uid()` (default) and `type` not `stage_change`/`owner_change`; ai_insights need `created_by = auth.uid()` (default).
+- `users_before_update_guard`: with a signed-in caller, only managers change roles (42501 `Only managers can change roles`) and users only rename themselves. `auth.uid()` null (service role / GoTrue admin) bypasses it.
+- USING mismatches are silent (0 rows); check affected rows (`.select()` after update/delete) where it matters.
+- New public functions: `revoke execute ... from public, anon` and grant to `authenticated` only if callable from the app; new tables: enable RLS + explicit grants.
+- `prospects` is in the `supabase_realtime` publication (for Prompt 9).
+
 ## Commands
 
 - `npm run dev` · `npm run build` · `npm run lint` · `npm run typecheck` · `npm run test` · `npm run e2e`

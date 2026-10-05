@@ -241,7 +241,10 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "is_manager":
+            "can_access_prospect":
+{ Args: { "p_prospect_id": string }; Returns: boolean
+                           },
+"is_manager":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "move_prospect_stage":
