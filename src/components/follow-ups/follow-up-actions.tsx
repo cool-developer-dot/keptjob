@@ -4,6 +4,7 @@
  * Per-follow-up actions, reusable by the detail page (Prompt 8) and the
  * follow-ups page (Prompt 10):
  * - <CompleteFollowUpButton>   popover with an optional outcome note → completeFollowUp
+ *                              (`nextAction` adds a button to the success toast)
  * - <RescheduleFollowUpButton> popover with a date input → rescheduleFollowUp
  * - <DeleteFollowUpButton>     alert-dialog confirm → deleteFollowUp
  * The actions revalidate the affected pages; `onDone` is for extra UI (e.g. a toast action).
@@ -40,16 +41,30 @@ type FollowUpRef = Pick<FollowUpRow, "id" | "note" | "due_date">;
 const completeFormSchema = followUpCompleteSchema.pick({ note: true });
 const rescheduleFormSchema = followUpRescheduleSchema.pick({ dueDate: true });
 
+/** Optional button on the success toast, e.g. "Schedule next follow-up" (Prompt 10). */
+export type FollowUpToastAction = {
+  label: string;
+  onClick: (completed: FollowUpRow) => void;
+};
+
+/** How long a success toast with an action stays up (time to click it). */
+const ACTION_TOAST_MS = 10_000;
+
 export function CompleteFollowUpButton({
   followUp,
   onDone,
+  nextAction,
 }: {
   followUp: FollowUpRef;
   onDone?: (completed: FollowUpRow) => void;
+  nextAction?: FollowUpToastAction;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
-  const form = useForm({ resolver: zodResolver(completeFormSchema), defaultValues: { note: "" } });
+  const form = useForm({
+    resolver: zodResolver(completeFormSchema),
+    defaultValues: { note: "" },
+  });
 
   const onOpenChange = (next: boolean) => {
     if (pending) return;
@@ -59,14 +74,29 @@ export function CompleteFollowUpButton({
 
   const onSubmit = (values: { note?: string | null }) =>
     startTransition(async () => {
-      const result = await completeFollowUp({ followUpId: followUp.id, note: values.note });
+      const result = await completeFollowUp({
+        followUpId: followUp.id,
+        note: values.note,
+      });
       if (!result.ok) {
         toast.error(result.error);
         return;
       }
-      toast.success("Follow-up completed.");
+      const completed = result.data;
+      toast.success(
+        "Follow-up completed.",
+        nextAction
+          ? {
+              duration: ACTION_TOAST_MS,
+              action: {
+                label: nextAction.label,
+                onClick: () => nextAction.onClick(completed),
+              },
+            }
+          : undefined,
+      );
       setOpen(false);
-      onDone?.(result.data);
+      onDone?.(completed);
     });
 
   return (
@@ -135,7 +165,10 @@ export function RescheduleFollowUpButton({
         setOpen(false);
         return;
       }
-      const result = await rescheduleFollowUp({ followUpId: followUp.id, dueDate: values.dueDate });
+      const result = await rescheduleFollowUp({
+        followUpId: followUp.id,
+        dueDate: values.dueDate,
+      });
       if (!result.ok) {
         toast.error(result.error);
         return;

@@ -164,6 +164,37 @@ export function followUpBucket(
   return "later";
 }
 
+/** The Completed view covers the org calendar days today − 29 … today (SPEC §8, Prompt 10). */
+export const COMPLETED_WINDOW_DAYS = 30;
+
+export type FollowUpViewBucket = FollowUpBucket | "completed";
+
+/**
+ * Follow-ups page tab of any follow-up (pending or completed) relative to org
+ * "today". **Mirror of SQL `public.follow_up_bucket()`** (the source of truth
+ * for the page's lists and counts; parity is checked by the integration tests):
+ * - pending   → followUpBucket(): overdue / today / upcoming (≤ today + 7) / later
+ * - completed → "completed" when the org-tz date of completedAt is within the
+ *   COMPLETED_WINDOW_DAYS org days ending today, otherwise null
+ */
+export function followUpViewBucket(
+  followUp: { status: "pending" | "completed"; dueDate: DateString; completedAt: Instant | null },
+  tz: string,
+  now: Instant = new Date(),
+): FollowUpViewBucket | null {
+  if (followUp.status === "pending") return followUpBucket(followUp.dueDate, tz, now);
+  if (followUp.completedAt === null) return null;
+  const windowStart = addDaysToDateString(orgToday(tz, now), -(COMPLETED_WINDOW_DAYS - 1));
+  return toOrgDate(followUp.completedAt, tz) >= windowStart ? "completed" : null;
+}
+
+/** Whole calendar days from `from` to `to` ("YYYY-MM-DD"; negative when `to` is earlier). */
+export function daysBetweenDateStrings(from: DateString, to: DateString): number {
+  const a = parseDateString(from);
+  const b = parseDateString(to);
+  return Math.round((Date.UTC(b.y, b.m - 1, b.d) - Date.UTC(a.y, a.m - 1, a.d)) / 86_400_000);
+}
+
 /**
  * Short label for the org timezone, e.g. "ET", "CT", "MT", "PT", "AKT", "MST"
  * (Phoenix), "HST" — shown next to demo date/time inputs. Derived with Intl

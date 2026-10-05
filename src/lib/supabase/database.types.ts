@@ -219,7 +219,44 @@ isOneToOne: false
                 }
           }
           Views: {
-            "latest_ai_insights": {
+            "follow_up_buckets": {
+                  Row: {
+                    "bucket": string | null,"completed_at": string | null,"completed_by": string | null,"created_at": string | null,"created_by": string | null,"due_date": string | null,"id": string | null,"note": string | null,"owner_id": string | null,"prospect_id": string | null,"status": Database["public"]['Enums']["follow_up_status"] | null,"updated_at": string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "follow_ups_completed_by_fkey"
+      columns: ["completed_by"]
+isOneToOne: false
+      referencedRelation: "users"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "follow_ups_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "users"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "follow_ups_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "users"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "follow_ups_prospect_id_fkey"
+      columns: ["prospect_id"]
+isOneToOne: false
+      referencedRelation: "prospects"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "follow_ups_prospect_id_fkey"
+      columns: ["prospect_id"]
+isOneToOne: false
+      referencedRelation: "prospects_with_flags"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"latest_ai_insights": {
                   Row: {
                     "created_at": string | null,"deal_health": Database["public"]['Enums']["deal_health"] | null,"id": string | null,"prospect_id": string | null
                   }
@@ -232,6 +269,25 @@ isOneToOne: false
       referencedColumns: ["id"]
     },{
       foreignKeyName: "ai_insights_prospect_id_fkey"
+      columns: ["prospect_id"]
+isOneToOne: false
+      referencedRelation: "prospects_with_flags"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"latest_conversation_activities": {
+                  Row: {
+                    "content_length": number | null,"id": string | null,"occurred_at": string | null,"prospect_id": string | null,"snippet": string | null,"type": Database["public"]['Enums']["activity_type"] | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "activities_prospect_id_fkey"
+      columns: ["prospect_id"]
+isOneToOne: false
+      referencedRelation: "prospects"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "activities_prospect_id_fkey"
       columns: ["prospect_id"]
 isOneToOne: false
       referencedRelation: "prospects_with_flags"
@@ -262,6 +318,14 @@ isOneToOne: false
           Functions: {
             "can_access_prospect":
 { Args: { "p_prospect_id": string }; Returns: boolean
+                           },
+"follow_up_bucket":
+{ Args: { "p_completed_at": string,"p_due_date": string,"p_now": string,"p_status": Database["public"]['Enums']["follow_up_status"],"p_timezone": string }; Returns: string
+                           },
+"follow_up_bucket_counts":
+{ Args: { "p_owner_id"?: string }; Returns: {
+              "completed": number,"overdue": number,"today": number,"upcoming": number
+            }[]
                            },
 "is_manager":
 { Args: Record<PropertyKey, never>; Returns: boolean

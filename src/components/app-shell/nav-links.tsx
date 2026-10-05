@@ -8,13 +8,18 @@ import { cn } from "@/lib/utils";
 
 import { isActivePath, navItemsForRole } from "./nav-items";
 
-export function NavLinks({ role, onNavigate }: { role: Role; onNavigate?: () => void }) {
+/** Count pills next to nav items, keyed by href (e.g. "/follow-ups": own overdue + today). */
+export type NavBadges = Partial<Record<string, NavBadge>>;
+export type NavBadge = { count: number; label: string };
+
+export function NavLinks({ role, badges, onNavigate }: { role: Role; badges?: NavBadges; onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
     <nav aria-label="Main" className="flex flex-col gap-1">
       {navItemsForRole(role).map(({ href, label, icon: Icon }) => {
         const active = isActivePath(pathname, href);
+        const badge = badges?.[href];
         return (
           <Link
             key={href}
@@ -28,6 +33,16 @@ export function NavLinks({ role, onNavigate }: { role: Role; onNavigate?: () => 
           >
             <Icon className="size-4" aria-hidden />
             {label}
+            {badge && badge.count > 0 && (
+              <span
+                data-nav-badge={href}
+                title={badge.label}
+                className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-xs leading-5 font-semibold text-white tabular-nums dark:bg-red-500"
+              >
+                {badge.count > 99 ? "99+" : badge.count}
+                <span className="sr-only"> ({badge.label})</span>
+              </span>
+            )}
           </Link>
         );
       })}

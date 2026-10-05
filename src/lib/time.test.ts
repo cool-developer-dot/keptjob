@@ -3,9 +3,12 @@ import { describe, expect, it } from "vitest";
 import { ALLOWED_TIMEZONES } from "@/lib/constants";
 
 import {
+  COMPLETED_WINDOW_DAYS,
   UPCOMING_DAYS,
   addDaysToDateString,
+  daysBetweenDateStrings,
   followUpBucket,
+  followUpViewBucket,
   formatDateString,
   formatOrgDate,
   formatOrgDateTime,
@@ -198,6 +201,66 @@ describe("followUpBucket", () => {
 
   it("rejects malformed due dates", () => {
     expect(() => followUpBucket("10/06/2026", NY, now)).toThrow(RangeError);
+  });
+});
+
+describe("followUpViewBucket (mirror of SQL follow_up_bucket)", () => {
+  type Case = [
+    label: string,
+    status: "pending" | "completed",
+    dueDate: string,
+    completedAt: string | null,
+    now: string,
+    tz: string,
+    expected: ReturnType<typeof followUpViewBucket>,
+  ];
+  // Same cases as supabase/tests/follow_ups.test.sql.
+  const cases: Case[] = [
+    ["11 pm NY (next day UTC): due NY today", "pending", "2026-10-05", null, "2026-10-06T03:00:00Z", NY, "today"],
+    ["11 pm NY: due UTC today is upcoming", "pending", "2026-10-06", null, "2026-10-06T03:00:00Z", NY, "upcoming"],
+    ["11 pm NY: due yesterday is overdue", "pending", "2026-10-04", null, "2026-10-06T03:00:00Z", NY, "overdue"],
+    ["same instant in UTC: overdue", "pending", "2026-10-05", null, "2026-10-06T03:00:00Z", "UTC", "overdue"],
+    ["Honolulu 11:30 pm: today", "pending", "2026-10-05", null, "2026-10-06T09:30:00Z", HONOLULU, "today"],
+    ["same instant in NY: overdue", "pending", "2026-10-05", null, "2026-10-06T09:30:00Z", NY, "overdue"],
+    ["DST spring: 11:30 pm EST Mar 7", "pending", "2026-03-08", null, "2026-03-08T04:30:00Z", NY, "upcoming"],
+    ["DST spring: 11:30 pm EDT Mar 8", "pending", "2026-03-08", null, "2026-03-09T03:30:00Z", NY, "today"],
+    ["DST fall: 11:30 pm EDT Oct 31", "pending", "2026-11-01", null, "2026-11-01T03:30:00Z", NY, "upcoming"],
+    ["DST fall: 11:30 pm EST Nov 1", "pending", "2026-11-01", null, "2026-11-02T04:30:00Z", NY, "today"],
+    ["today + 7 is upcoming", "pending", "2026-10-12", null, "2026-10-05T16:00:00Z", NY, "upcoming"],
+    ["today + 8 is later", "pending", "2026-10-13", null, "2026-10-05T16:00:00Z", NY, "later"],
+    ["completed on today − 29 (NY)", "completed", "2026-09-01", "2026-09-06T04:30:00Z", "2026-10-06T03:00:00Z", NY, "completed"],
+    ["completed on today − 30 (NY)", "completed", "2026-09-01", "2026-09-06T03:30:00Z", "2026-10-06T03:00:00Z", NY, null],
+    ["completed today, old due date", "completed", "2020-01-01", "2026-10-05T12:00:00Z", "2026-10-05T16:00:00Z", NY, "completed"],
+  ];
+
+  it.each(cases)("%s", (_label, status, dueDate, completedAt, now, tz, expected) => {
+    expect(followUpViewBucket({ status, dueDate, completedAt }, tz, now)).toBe(expected);
+  });
+
+  it(`the completed window is ${COMPLETED_WINDOW_DAYS} org days in every allowed timezone`, () => {
+    const now = "2026-07-15T12:00:00Z";
+    for (const tz of ALLOWED_TIMEZONES) {
+      const today = orgToday(tz, now);
+      const first = orgLocalToUtc(addDaysToDateString(today, -(COMPLETED_WINDOW_DAYS - 1)), "00:00", tz);
+      const before = orgLocalToUtc(addDaysToDateString(today, -COMPLETED_WINDOW_DAYS), "23:59", tz);
+      expect(followUpViewBucket({ status: "completed", dueDate: today, completedAt: first }, tz, now)).toBe("completed");
+      expect(followUpViewBucket({ status: "completed", dueDate: today, completedAt: before }, tz, now)).toBeNull();
+    }
+  });
+
+  it("a completed row without completed_at is never shown", () => {
+    expect(followUpViewBucket({ status: "completed", dueDate: "2026-10-05", completedAt: null }, NY)).toBeNull();
+  });
+});
+
+describe("daysBetweenDateStrings", () => {
+  it("counts calendar days across DST and year boundaries", () => {
+    expect(daysBetweenDateStrings("2026-10-05", "2026-10-05")).toBe(0);
+    expect(daysBetweenDateStrings("2026-10-05", "2026-10-08")).toBe(3);
+    expect(daysBetweenDateStrings("2026-10-08", "2026-10-05")).toBe(-3);
+    expect(daysBetweenDateStrings("2026-03-07", "2026-03-09")).toBe(2);
+    expect(daysBetweenDateStrings("2026-12-31", "2027-01-01")).toBe(1);
+    expect(() => daysBetweenDateStrings("2026-02-30", "2026-03-01")).toThrow(RangeError);
   });
 });
 
