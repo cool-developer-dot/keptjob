@@ -83,6 +83,30 @@ const editableFields = {
   currency: currencySchema,
 };
 
+/**
+ * The detail page's "Edit details" form (client): every editable field, all
+ * present. The page sends only the changed ones (changedProspectFields) to
+ * updateProspect, which re-validates with prospectUpdateSchema.
+ */
+export const prospectDetailsFormSchema = z.object({
+  ...editableFields,
+  currency: currencySchema,
+});
+export type ProspectDetailsFormInput = z.input<typeof prospectDetailsFormSchema>;
+export type ProspectDetailsFormData = z.output<typeof prospectDetailsFormSchema>;
+
+/** Keys whose parsed value differs between `initial` and `next` (deep compare via JSON). */
+export function changedProspectFields(
+  initial: ProspectDetailsFormData,
+  next: ProspectDetailsFormData,
+): Partial<ProspectDetailsFormData> {
+  const changed: Partial<Record<keyof ProspectDetailsFormData, unknown>> = {};
+  for (const key of Object.keys(next) as (keyof ProspectDetailsFormData)[]) {
+    if (JSON.stringify(next[key] ?? null) !== JSON.stringify(initial[key] ?? null)) changed[key] = next[key];
+  }
+  return changed as Partial<ProspectDetailsFormData>;
+}
+
 export const prospectCreateSchema = z.object({
   ...editableFields,
   decisionMakerStatus: decisionMakerStatusSchema.default("unknown"),

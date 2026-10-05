@@ -21,6 +21,7 @@ import {
   TIMEZONE_LABELS,
   WON_REASON_LABELS,
   WON_REASONS,
+  closeReasonLabel,
   isClosedStage,
 } from "./constants";
 
@@ -150,5 +151,19 @@ describe("constants match SPEC.md", () => {
     expect(DECISION_MAKER_STATUSES).toEqual(["yes", "no", "unknown"]);
     expect(FOLLOW_UP_STATUSES).toEqual(["pending", "completed"]);
     expect(DEAL_HEALTH_VALUES).toEqual(["high", "medium", "low"]);
+  });
+});
+
+describe("closeReasonLabel", () => {
+  it("uses the won or lost list depending on the stage", () => {
+    expect(closeReasonLabel("closed_won", "price_value")).toBe("Price/value");
+    expect(closeReasonLabel("closed_lost", "price")).toBe("Price");
+    expect(closeReasonLabel("closed_lost", "no_budget")).toBe("No budget");
+  });
+
+  it("returns null for open stages or no reason, the raw value for unknown reasons", () => {
+    expect(closeReasonLabel("qualified", "price")).toBeNull();
+    expect(closeReasonLabel("closed_won", null)).toBeNull();
+    expect(closeReasonLabel("closed_won", "custom_reason")).toBe("custom_reason");
   });
 });

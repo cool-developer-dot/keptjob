@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import { LOST_REASONS, WON_REASONS } from "@/lib/constants";
 
 import {
+  changedProspectFields,
   prospectCreateSchema,
+  prospectDetailsFormSchema,
   prospectIdSchema,
   prospectUpdateSchema,
   reassignProspectSchema,
@@ -193,5 +195,56 @@ describe("reassignProspectSchema / prospectIdSchema", () => {
     expect(reassignProspectSchema.safeParse({ prospectId: ID, ownerId: "rep" }).success).toBe(false);
     expect(prospectIdSchema.safeParse({ prospectId: ID }).success).toBe(true);
     expect(prospectIdSchema.safeParse({ prospectId: "1" }).success).toBe(false);
+  });
+});
+
+describe("prospectDetailsFormSchema / changedProspectFields", () => {
+  const base = {
+    name: "Jordan Lee",
+    company: "Northwind",
+    email: "jordan@northwind.example",
+    phone: "",
+    decisionMakerStatus: "unknown",
+    objections: ["price"],
+    objectionNotes: "",
+    notes: "Line 1\nLine 2",
+    dealValue: 1500,
+    currency: "USD",
+  } as const;
+
+  it("parses the full form (empty strings → null)", () => {
+    const data = prospectDetailsFormSchema.parse(base);
+    expect(data.phone).toBeNull();
+    expect(data.objectionNotes).toBeNull();
+    expect(data.dealValue).toBe(1500);
+  });
+
+  it("rejects invalid email / deal value / currency and an empty name", () => {
+    expect(prospectDetailsFormSchema.safeParse({ ...base, email: "nope" }).success).toBe(false);
+    expect(prospectDetailsFormSchema.safeParse({ ...base, dealValue: "-1" }).success).toBe(false);
+    expect(prospectDetailsFormSchema.safeParse({ ...base, currency: "XXZ" }).success).toBe(false);
+    expect(prospectDetailsFormSchema.safeParse({ ...base, name: "  " }).success).toBe(false);
+  });
+
+  it("returns only the fields whose parsed value changed", () => {
+    const initial = prospectDetailsFormSchema.parse(base);
+    const same = prospectDetailsFormSchema.parse({ ...base, dealValue: "1,500.00", email: " JORDAN@northwind.example " });
+    expect(changedProspectFields(initial, same)).toEqual({});
+
+    const next = prospectDetailsFormSchema.parse({
+      ...base,
+      objections: ["price", "timing"],
+      dealValue: "",
+      decisionMakerStatus: "yes",
+    });
+    expect(changedProspectFields(initial, next)).toEqual({
+      objections: ["price", "timing"],
+      dealValue: null,
+      decisionMakerStatus: "yes",
+    });
+    // The diff is a valid updateProspect payload.
+    expect(prospectUpdateSchema.safeParse({ prospectId: ID, ...changedProspectFields(initial, next) }).success).toBe(
+      true,
+    );
   });
 });

@@ -139,6 +139,17 @@ export const LOST_REASON_OPTIONS = toOptions(LOST_REASONS, LOST_REASON_LABELS);
 
 export type CloseReason = WonReason | LostReason;
 
+/**
+ * Label of a close reason for the given closed stage (won vs lost lists differ:
+ * "price" is a lost reason, "price_value" a won one). Unknown → the raw value;
+ * open stage or no reason → null.
+ */
+export function closeReasonLabel(stage: PipelineStage, reason: string | null | undefined): string | null {
+  if (!reason || !isClosedStage(stage)) return null;
+  const labels: Readonly<Record<string, string>> = stage === "closed_won" ? WON_REASON_LABELS : LOST_REASON_LABELS;
+  return labels[reason] ?? reason;
+}
+
 // ---------------------------------------------------------------------------
 // Activity types (SPEC §7)
 // ---------------------------------------------------------------------------

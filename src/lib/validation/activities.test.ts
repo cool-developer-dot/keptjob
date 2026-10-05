@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { activityCreateSchema } from "./activities";
+import { activityCreateSchema, makeActivityFormSchema, toActivityCreateInput } from "./activities";
 import { CLOCK_SKEW_MS } from "./common";
 
 const ID = "11111111-1111-4111-8111-000000000002";
@@ -70,5 +70,49 @@ describe("activityCreateSchema", () => {
         occurredAt,
       ).toBe(false);
     }
+  });
+});
+
+describe("makeActivityFormSchema / toActivityCreateInput", () => {
+  const TZ = "America/New_York";
+  const now = () => NOW; // 11:00 ET
+
+  it("converts org-local date + time to UTC (EDT = UTC-4)", () => {
+    const values = makeActivityFormSchema(TZ, now).parse({
+      type: "call",
+      content: " Intro call ",
+      date: "2026-10-06",
+      time: "09:30",
+    });
+    expect(toActivityCreateInput(ID, values, TZ)).toEqual({
+      prospectId: ID,
+      type: "call",
+      content: "Intro call",
+      occurredAt: "2026-10-06T13:30:00.000Z",
+    });
+  });
+
+  it("rejects a future time (beyond the clock-skew tolerance) on the time field", () => {
+    const result = makeActivityFormSchema(TZ, now).safeParse({
+      type: "note",
+      content: "x",
+      date: "2026-10-06",
+      time: "11:10",
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual(["time"]);
+    expect(
+      makeActivityFormSchema(TZ, now).safeParse({ type: "note", content: "x", date: "2026-10-06", time: "11:04" })
+        .success,
+    ).toBe(true);
+  });
+
+  it("rejects invalid dates/times and system types without throwing", () => {
+    const schema = makeActivityFormSchema(TZ, now);
+    expect(schema.safeParse({ type: "note", content: "x", date: "2026-02-30", time: "10:00" }).success).toBe(false);
+    expect(schema.safeParse({ type: "note", content: "x", date: "2026-10-06", time: "25:00" }).success).toBe(false);
+    expect(schema.safeParse({ type: "stage_change", content: "x", date: "2026-10-06", time: "10:00" }).success).toBe(
+      false,
+    );
   });
 });
