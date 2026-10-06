@@ -84,6 +84,10 @@ Never prefix a secret with `NEXT_PUBLIC_` (those values are inlined into the bro
 | `npm run db:reset` | Recreate the local database from migrations + seed |
 | `npm run db:types` | Regenerate `src/lib/supabase/database.types.ts` from the local DB |
 | `npm run create-manager -- …` | Create or promote a manager (see below) |
+| `npm run create-user -- --role sales_rep …` | Same script for any role (sets role + missing name on existing users) |
+| `npm run demo-data -- --dotenv <file> [--clear]` | Load / remove 6 small demo prospects in a cloud project |
+| `npm run db:setup-sql` | Regenerate `supabase/setup/production-setup.sql` (first-time cloud DB setup via SQL Editor) |
+| `npm run start:cloud` | Build + run locally on :3001 against `.env.production.local` (cloud project) |
 | `npm run verify` | typecheck → lint → test → build (must pass after every change) |
 
 ## Tests
@@ -122,13 +126,16 @@ After that, the manager invites everyone else from **Settings → Team**. Delete
 Full runbook with every command, setting and the production smoke test: [`prompts/enhanced/15-deploy.md`](prompts/enhanced/15-deploy.md) (Part B). In short:
 
 1. **GitHub:** `gh repo create <owner>/<repo> --private --source=. --remote=origin --push`.
-2. **Supabase cloud:** create a project → `npx supabase login` → `npx supabase link --project-ref <ref>` → `npx supabase db push` (migrations only; **never** `--include-seed`).
+2. **Supabase cloud:** create a project, then create the database, either way (migrations only; **never** the seed):
+   - **No CLI:** Dashboard → **SQL Editor** → paste all of [`supabase/setup/production-setup.sql`](supabase/setup/production-setup.sql) → **Run**. One transaction, refuses to run twice, and records the migrations so `supabase db push` works for later ones. Regenerate it with `npm run db:setup-sql` after adding migrations (first-time setup only).
+   - **CLI:** `npx supabase login` → `npx supabase link --project-ref <ref>` → `npx supabase db push`.
    - Authentication → Sign In / Providers: **disable "Allow new users to sign up"**; password minimum length 8.
    - Authentication → URL Configuration: Site URL `https://<domain>`; Redirect URLs `https://<domain>/auth/confirm`.
    - Authentication → Emails → Templates: paste `supabase/templates/invite.html` (Invite user) and `recovery.html` (Reset password) — cloud doesn't read these files; the links must stay `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=…`. (`npx supabase config push` can push them, but it also offers local-only values like `site_url` and rate limits — decline those.)
    - Authentication → Emails → SMTP: configure a real provider before inviting reps (the default sender is test-only and limited to a few emails/hour).
 3. **Vercel:** import the GitHub repo (Next.js auto-detected; no `vercel.json` needed); set the environment variables from the table above for Production (`SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY` as Sensitive; no `AI_FAKE`); deploy.
-4. **First manager:** `npm run create-manager` against production (above).
+4. **Users:** `npm run create-manager` against production (above), or Dashboard → Authentication → **Add user** (email + password, *Auto Confirm*) and then set role + name: `npm run create-user -- --dotenv .env.production.local --role manager|sales_rep --email … --name "…" --yes` (for an existing user it only sets the role and a missing name).
+   Optional demo data for the first two reps: `npm run demo-data -- --dotenv .env.production.local --yes` (remove with `--clear`).
 5. **Smoke test:** first manager logs in → invites a rep → rep sets their password → creates a prospect → generates an AI insight (checklist in the runbook).
 
 Security headers (`X-Frame-Options`, `frame-ancestors`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS) are set in `next.config.ts`.

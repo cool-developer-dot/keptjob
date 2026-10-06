@@ -1,10 +1,12 @@
 /**
- * Creates (or promotes) a manager account. Meant for the FIRST manager in a
- * new environment (production has no seed users and public sign-up is off),
- * but safe to re-run: an existing user is promoted, nothing is duplicated.
+ * Creates (or updates the role of) a CRM account. Meant for the FIRST manager
+ * in a new environment (production has no seed users and public sign-up is
+ * off) and for sales reps before SMTP works (`--link`). Safe to re-run: an
+ * existing user only gets the requested role, nothing is duplicated.
  *
  *   npm run create-manager -- --email you@company.com --name "Your Name" \
- *     [--dotenv .env.production.local] [--link] [--yes]
+ *     [--role manager|sales_rep] [--dotenv .env.production.local] [--link] [--yes]
+ *   npm run create-user -- ...   (same script)
  *
  * Env (from the shell or --dotenv):
  *   SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL   project URL
@@ -17,8 +19,9 @@
  *   --link   prints a one-time invite link instead of sending an email (use
  *            when SMTP isn't configured yet). Single use, expires with the
  *            project's email OTP expiry. Treat it like a password.
- * Existing users are promoted (app_metadata.role = "manager"); their password
- * is untouched (they can use "Forgot password").
+ * Existing users get app_metadata.role = <role> (default "manager"); their
+ * password is untouched (they can use "Forgot password"). Demoting the last
+ * manager is refused by the database.
  *
  * Runs with Node 22's built-in TypeScript type stripping: no build step.
  */
@@ -29,14 +32,17 @@ import { createClient } from "@supabase/supabase-js";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { z } from "zod";
 
-const MANAGER_ROLE = "manager";
+const ROLES = ["manager", "sales_rep"] as const;
+type Role = (typeof ROLES)[number];
+const ROLE_LABELS: Record<Role, string> = { manager: "manager", sales_rep: "sales rep" };
 
 const USAGE = `Usage:
   npm run create-manager -- --email <email> --name "<Full Name>" [options]
 
 Options:
-  --email <email>       Email of the manager (required)
-  --name <full name>    Full name (required; an existing user's name is not changed)
+  --email <email>       Email of the user (required)
+  --name <full name>    Full name (required; on an existing user it is only set when they have none)
+  --role <role>         manager (default) or sales_rep
   --dotenv <path>       Load env vars from a dotenv file (e.g. .env.production.local)
   --link                Print a one-time invite link instead of sending the invite email
   --yes                 Don't ask for confirmation on a non-local project
@@ -50,6 +56,7 @@ class CliError extends Error {}
 const argsSchema = z.object({
   email: z.string().trim().toLowerCase().email("--email must be a valid email address."),
   name: z.string().trim().min(1, "--name is required.").max(100, "--name: use at most 100 characters."),
+  role: z.enum(ROLES, "--role must be manager or sales_rep."),
 });
 
 function readArgs() {
@@ -59,6 +66,7 @@ function readArgs() {
       options: {
         email: { type: "string" },
         name: { type: "string" },
+        role: { type: "string", default: "manager" },
         dotenv: { type: "string" },
         link: { type: "boolean", default: false },
         yes: { type: "boolean", default: false },
@@ -119,13 +127,13 @@ function isLocalHost(host: string): boolean {
   return ["localhost", "127.0.0.1", "[::1]", "host.docker.internal"].includes(hostname);
 }
 
-async function confirmTarget(host: string, skip: boolean) {
+async function confirmTarget(host: string, role: Role, skip: boolean) {
   if (isLocalHost(host) || skip) return;
   if (!process.stdin.isTTY) {
     throw new CliError(`Target ${host} is not local. Re-run with --yes to confirm in a non-interactive shell.`);
   }
   const rl = createInterface({ input: process.stdin, output: process.stdout });
-  const answer = await rl.question(`Create/promote a manager on ${host}? Type "yes" to continue: `);
+  const answer = await rl.question(`Create/update a ${ROLE_LABELS[role]} on ${host}? Type "yes" to continue: `);
   rl.close();
   if (answer.trim().toLowerCase() !== "yes") throw new CliError("Aborted.");
 }
@@ -162,23 +170,44 @@ async function findUserByEmail(admin: SupabaseClient, email: string): Promise<Us
   return null;
 }
 
-async function setManagerRole(admin: SupabaseClient, user: User) {
+async function setRole(admin: SupabaseClient, user: User, role: Role) {
   const { error } = await admin.auth.admin.updateUserById(user.id, {
-    app_metadata: { ...user.app_metadata, role: MANAGER_ROLE },
+    app_metadata: { ...user.app_metadata, role },
   });
   return error;
 }
 
+/**
+ * Users added in the Supabase dashboard have no name, so public.users.full_name
+ * holds the trigger's fallback (the email's local part). Replace only that
+ * placeholder (or an empty name); never overwrite a real name.
+ */
+async function fillMissingName(admin: SupabaseClient, user: User, name: string): Promise<boolean> {
+  const { data, error } = await admin.from("users").select("full_name").eq("id", user.id).maybeSingle();
+  if (error || !data) return false;
+  const current = (data.full_name ?? "").trim();
+  const placeholder = (user.email ?? "").split("@")[0];
+  if (current !== "" && current !== placeholder) return false;
+  if (current === name) return false;
+  const meta = await admin.auth.admin.updateUserById(user.id, {
+    user_metadata: { ...user.user_metadata, full_name: name },
+  });
+  if (meta.error) throw new CliError(describeError("Setting the user's name", meta.error));
+  const update = await admin.from("users").update({ full_name: name }).eq("id", user.id);
+  if (update.error) throw new CliError(`Setting the user's name failed: ${update.error.message}`);
+  return true;
+}
+
 /** public.users.role is synced from app_metadata by a trigger; double-check it. */
-async function checkPublicRole(admin: SupabaseClient, userId: string) {
+async function checkPublicRole(admin: SupabaseClient, userId: string, role: Role) {
   const { data, error } = await admin.from("users").select("role").eq("id", userId).maybeSingle();
   if (error) {
     console.warn(`Warning: could not read public.users (${error.message}). Are the migrations applied?`);
     return;
   }
-  if (data?.role !== MANAGER_ROLE) {
+  if (data?.role !== role) {
     throw new CliError(
-      `app_metadata.role is "manager" but public.users.role is "${data?.role ?? "missing"}". ` +
+      `app_metadata.role is "${role}" but public.users.role is "${data?.role ?? "missing"}". ` +
         "Check that all migrations are applied (`npx supabase db push`).",
     );
   }
@@ -188,18 +217,19 @@ async function main() {
   const values = readArgs();
   loadEnv(values.dotenv);
 
-  const input = argsSchema.safeParse({ email: values.email ?? "", name: values.name ?? "" });
+  const input = argsSchema.safeParse({ email: values.email ?? "", name: values.name ?? "", role: values.role });
   if (!input.success) {
     throw new CliError(`${input.error.issues.map((i) => i.message).join("\n")}\n\n${USAGE}`);
   }
-  const { email, name } = input.data;
+  const { email, name, role } = input.data;
+  const label = ROLE_LABELS[role];
   const config = readConfig();
   if (values.link && !config.siteUrl) {
     throw new CliError("--link needs NEXT_PUBLIC_SITE_URL (or SITE_URL), e.g. https://crm.example.com");
   }
 
   console.log(`Supabase project: ${config.host}${isLocalHost(config.host) ? " (local)" : ""}`);
-  await confirmTarget(config.host, values.yes);
+  await confirmTarget(config.host, role, values.yes);
 
   const admin = createClient(config.url, config.serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
@@ -207,15 +237,16 @@ async function main() {
 
   const existing = await findUserByEmail(admin, email);
   if (existing) {
-    if (existing.app_metadata?.role === MANAGER_ROLE) {
-      await checkPublicRole(admin, existing.id);
-      console.log(`${email} is already a manager (user ${existing.id}). Nothing to do.`);
+    if (await fillMissingName(admin, existing, name)) console.log(`Set the name of ${email} to "${name}".`);
+    if (existing.app_metadata?.role === role) {
+      await checkPublicRole(admin, existing.id, role);
+      console.log(`${email} is already a ${label} (user ${existing.id}). Nothing to do.`);
       return;
     }
-    const error = await setManagerRole(admin, existing);
-    if (error) throw new CliError(describeError("Promoting the user", error));
-    await checkPublicRole(admin, existing.id);
-    console.log(`Promoted existing user ${email} (user ${existing.id}) to manager.`);
+    const error = await setRole(admin, existing, role);
+    if (error) throw new CliError(describeError("Changing the user's role", error));
+    await checkPublicRole(admin, existing.id, role);
+    console.log(`Changed existing user ${email} (user ${existing.id}) to ${label}.`);
     console.log("Their password is unchanged; they can use \"Forgot password\" on the login page if needed.");
     return;
   }
@@ -244,15 +275,15 @@ async function main() {
     user = data.user;
   }
 
-  const roleError = await setManagerRole(admin, user);
+  const roleError = await setRole(admin, user, role);
   if (roleError) {
-    // Don't leave a half-configured (sales_rep) account behind.
+    // Don't leave a half-configured account (with the default role) behind.
     await admin.auth.admin.deleteUser(user.id);
-    throw new CliError(describeError("Setting the manager role (the new user was removed again)", roleError));
+    throw new CliError(describeError(`Setting the ${label} role (the new user was removed again)`, roleError));
   }
-  await checkPublicRole(admin, user.id);
+  await checkPublicRole(admin, user.id, role);
 
-  console.log(`Created manager ${name} <${email}> (user ${user.id}).`);
+  console.log(`Created ${label} ${name} <${email}> (user ${user.id}).`);
   if (inviteLink) {
     console.log("\nOne-time invite link (single use, expires; share it privately, then it's useless):");
     console.log(inviteLink);
