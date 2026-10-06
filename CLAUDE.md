@@ -211,7 +211,7 @@ e2e/                        Playwright tests
 - `scripts/demo-data.mts` (`npm run demo-data -- --dotenv <file> [--clear] [--yes]`): 6 small demo prospects (fixed ids `dddddddd-dddd-4ddd-8ddd-…`) for the first two sales reps, created "today" at their stage with back-dated activities and org-tz follow-ups; re-run replaces, `--clear` removes. Never push `supabase/seed.sql` to the cloud.
 - Email templates `supabase/templates/{invite,recovery}.html` are table-based inline-styled HTML; e2e extracts the **first** `href="…/auth/confirm?…type=<type>"`, so keep the button link first and ending in `type=…"`. Cloud: paste them in the dashboard (subjects in `config.toml`).
 - `next.config.ts` sets security headers (X-Frame-Options DENY, `frame-ancestors 'none'`, nosniff, Referrer-Policy, Permissions-Policy, HSTS) + `poweredByHeader: false`. No full CSP (Next inline scripts would need nonces). No `vercel.json`.
-- CI: `.github/ci.yml` (inactive until moved to `.github/workflows/ci.yml`; the push token lacked the `workflow` scope) — `verify` job + a job with local Supabase in Docker running `test:db`, `test:integration`, `e2e` (writes `.env.local` from `supabase status -o env`).
+- CI: `.github/workflows/ci.yml` — `verify` job + a job with local Supabase in Docker running `test:db`, `test:integration`, `e2e` (writes `.env.local` from `supabase status -o env`).
 
 ## Commands
 
