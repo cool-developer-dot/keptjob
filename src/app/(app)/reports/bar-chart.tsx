@@ -101,7 +101,7 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: readonl
   const datum = active ? payload?.[0]?.payload : undefined;
   if (!datum) return null;
   return (
-    <div className="rounded-md border bg-popover px-2.5 py-1.5 text-xs text-popover-foreground shadow-md">
+    <div className="glass-strong rounded-xl px-3 py-2 text-xs text-popover-foreground">
       <p className="font-medium">{datum.label}</p>
       <p className="flex items-center gap-1.5 text-muted-foreground">
         <span aria-hidden className="inline-block size-2 rounded-full bg-[var(--viz-series-1)]" />

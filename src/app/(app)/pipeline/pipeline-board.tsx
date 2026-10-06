@@ -102,6 +102,19 @@ const collisionDetection: CollisionDetection = (args) => {
   return hits.length > 0 ? hits : rectIntersection(args);
 };
 
+/** Column header dots: neutral greys through the open stages, green for won, red for lost. */
+const STAGE_DOTS: Record<PipelineStage, string> = {
+  prospect: "bg-slate-300",
+  contacted: "bg-slate-400",
+  conversation: "bg-slate-500",
+  qualified: "bg-sky-400",
+  demo_booked: "bg-sky-500",
+  demo_attended: "bg-sky-600",
+  follow_up: "bg-amber-400",
+  closed_won: "bg-emerald-500",
+  closed_lost: "bg-red-400",
+};
+
 const stageName = (id: unknown) => (isStage(id) ? STAGE_LABELS[id] : "a stage");
 
 const announcements: Announcements = {
@@ -245,7 +258,7 @@ export function PipelineBoard({
         </div>
         <DragOverlay dropAnimation={null}>
           {activeCard && (
-            <div className="w-68 cursor-grabbing rounded-md border bg-card p-3 shadow-lg ring-2 ring-primary/30">
+            <div className="glass-strong w-68 rotate-[1.5deg] cursor-grabbing rounded-2xl p-3.5 ring-1 ring-[oklch(0.3_0.01_255/0.15)]">
               <PipelineCardBody
                 card={activeCard}
                 ownerName={ownerNameOf(activeCard)}
@@ -281,30 +294,31 @@ function StageColumn({
       aria-labelledby={headingId}
       data-stage={stage}
       className={cn(
-        "flex w-72 shrink-0 flex-col rounded-lg border bg-muted/40 transition-colors",
-        isOver && "border-primary/60 bg-primary/5",
+        "glass flex w-72 shrink-0 flex-col rounded-3xl transition-all duration-200",
+        isOver && "ring-2 ring-[oklch(0.3_0.01_255/0.25)] [--glass-bg:oklch(1_0_0/0.78)] dark:ring-white/25 dark:[--glass-bg:oklch(0.32_0.006_255/0.6)]",
       )}
     >
-      <header className="space-y-0.5 border-b px-3 py-2">
+      <header className="space-y-1 px-4 pt-4 pb-3">
         <div className="flex items-center justify-between gap-2">
-          <h2 id={headingId} className="text-sm font-semibold">
+          <h2 id={headingId} className="flex items-center gap-2 text-sm font-semibold tracking-tight">
+            <span aria-hidden className={cn("size-2 rounded-full", STAGE_DOTS[stage])} />
             {STAGE_LABELS[stage]}
           </h2>
           <span
-            className="rounded-full bg-background px-2 text-xs font-medium tabular-nums"
+            className="rounded-full bg-white/70 px-2 text-xs leading-5 font-medium tabular-nums shadow-[inset_0_1px_0_0_oklch(1_0_0)] dark:bg-white/10 dark:shadow-none"
             aria-label={`${summary.count} prospect${summary.count === 1 ? "" : "s"}`}
             data-testid="column-count"
           >
             {summary.count}
           </span>
         </div>
-        <p className="min-h-4 truncate text-xs text-muted-foreground tabular-nums" data-testid="column-total">
+        <p className="min-h-4 truncate pl-4 text-xs text-muted-foreground tabular-nums" data-testid="column-total">
           {summary.totals.map((t) => formatMoney(t.total, t.currency, { compact: true })).join(" · ")}
         </p>
       </header>
-      <ul className="flex min-h-24 flex-1 flex-col gap-2 p-2" aria-label={`${STAGE_LABELS[stage]} prospects`}>
+      <ul className="flex min-h-24 flex-1 flex-col gap-2.5 px-2.5 pb-2.5" aria-label={`${STAGE_LABELS[stage]} prospects`}>
         {cards.length === 0 ? (
-          <li className="flex flex-1 items-center justify-center rounded-md border border-dashed p-4 text-xs text-muted-foreground">
+          <li className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-[oklch(0.3_0.01_255/0.15)] p-4 text-xs text-muted-foreground dark:border-white/10">
             No prospects
           </li>
         ) : (
@@ -367,7 +381,7 @@ function DraggableCard({
           }
         }}
         className={cn(
-          "cursor-pointer touch-manipulation rounded-md border bg-card p-3 shadow-xs outline-none select-none hover:border-primary/40 focus-visible:ring-2 focus-visible:ring-ring",
+          "glass-tile cursor-pointer touch-manipulation rounded-2xl p-3.5 outline-none select-none transition-all duration-200 hover:-translate-y-px hover:bg-white/95 hover:shadow-[inset_0_1px_0_0_oklch(1_0_0),0_8px_20px_-10px_oklch(0.35_0.1_274/0.35)] focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-white/10",
           isDragging && "opacity-40",
           pending && "cursor-progress opacity-70",
         )}

@@ -52,17 +52,17 @@ export function NeedsAttentionList({
               Showing the {rows.length} least recently active of {total} deals.
             </p>
           )}
-          <ul aria-label="Deals that need attention" className="divide-y rounded-lg border">
+          <ul aria-label="Deals that need attention" className="glass divide-y divide-[oklch(0.3_0.01_255/0.07)] overflow-hidden rounded-2xl dark:divide-white/5">
             {rows.map((row) => (
               <li
                 key={row.id}
                 data-prospect-id={row.id}
-                className="grid gap-3 p-4 md:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_auto] md:items-start md:gap-4"
+                className="grid gap-3 px-5 py-4 transition-colors hover:bg-white/45 md:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_auto] md:items-start md:gap-5 dark:hover:bg-white/5"
               >
                 <div className="min-w-0">
                   <Link
                     href={`/prospects/${row.id}`}
-                    className="block truncate font-medium hover:underline focus-visible:underline focus-visible:outline-none"
+                    className="block truncate font-semibold tracking-tight hover:underline focus-visible:underline focus-visible:outline-none"
                   >
                     {row.name}
                   </Link>

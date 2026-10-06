@@ -35,9 +35,9 @@ export function SetPasswordForm({ email }: { email: string }) {
     });
 
   return (
-    <Card>
+    <Card className="glass-strong gap-6 rounded-3xl py-7 [--card-spacing:--spacing(7)]">
       <CardHeader>
-        <CardTitle>Set your password</CardTitle>
+        <CardTitle className="text-xl">Set your password</CardTitle>
         <CardDescription>
           Choose a new password for <strong>{email}</strong>.
         </CardDescription>

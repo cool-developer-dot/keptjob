@@ -20,7 +20,7 @@ export default function ProspectsError({
   return (
     <div
       role="alert"
-      className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed px-6 py-16 text-center"
+      className="glass flex flex-col items-center justify-center gap-3 rounded-3xl px-6 py-16 text-center"
     >
       <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
         <AlertCircleIcon aria-hidden className="size-6" />

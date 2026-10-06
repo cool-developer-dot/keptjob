@@ -26,7 +26,7 @@ export function ReportSkeleton() {
     <div aria-busy="true" aria-label="Loading report" className="space-y-6">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {Array.from({ length: 8 }, (_, tile) => (
-          <div key={tile} className="space-y-2 rounded-xl border p-4">
+          <div key={tile} className="glass space-y-2 rounded-2xl p-4">
             <Skeleton className="h-3 w-20" />
             <Skeleton className="h-7 w-16" />
             <Skeleton className="h-3 w-24" />

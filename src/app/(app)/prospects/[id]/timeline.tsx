@@ -41,8 +41,8 @@ function TimelineItem({
       <span
         aria-hidden
         className={cn(
-          "flex size-8 shrink-0 items-center justify-center rounded-full border bg-background text-muted-foreground",
-          entry.type === "ai_insight" && "text-violet-600 dark:text-violet-300",
+          "flex size-8 shrink-0 items-center justify-center rounded-full border border-white/90 bg-white text-muted-foreground shadow-[0_1px_3px_oklch(0.25_0.01_255/0.1)] dark:border-white/10 dark:bg-[oklch(0.3_0.006_255)]",
+          entry.type === "ai_insight" && "text-foreground",
         )}
       >
         <Icon className="size-4" />

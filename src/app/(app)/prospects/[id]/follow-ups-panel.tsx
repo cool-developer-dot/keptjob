@@ -56,7 +56,7 @@ export function FollowUpsPanel({
       </CardHeader>
       <CardContent className="space-y-5">
         {adding && (
-          <div className="rounded-lg border bg-muted/30 p-3">
+          <div className="glass-tile rounded-2xl p-3.5">
             <FollowUpForm prospectId={prospectId} onDone={() => setAdding(false)} onCancel={() => setAdding(false)} />
           </div>
         )}

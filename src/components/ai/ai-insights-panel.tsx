@@ -100,14 +100,14 @@ export function AiInsightsPanel({ prospectId, prospectName, decisionMakerStatus,
           <p
             role="alert"
             data-testid="ai-insights-error"
-            className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+            className="rounded-xl border border-destructive/25 bg-destructive/5 px-3 py-2 text-sm text-destructive"
           >
             {error ?? loadError}
           </p>
         )}
 
         {!latest ? (
-          <div className="space-y-3 rounded-md border border-dashed px-3 py-4 text-center">
+          <div className="space-y-3 rounded-2xl border border-dashed border-[oklch(0.3_0.01_255/0.15)] bg-white/30 px-4 py-6 text-center dark:border-white/10 dark:bg-white/5">
             <p className="text-sm text-muted-foreground">
               No AI insights yet. Generate a summary, the main objection and a recommended next step from this
               prospect&apos;s notes and activity.
@@ -124,7 +124,7 @@ export function AiInsightsPanel({ prospectId, prospectName, decisionMakerStatus,
             {suggestDm && (
               <div
                 data-testid="ai-dm-suggestion"
-                className="space-y-2 rounded-md border border-violet-200 bg-violet-50 px-3 py-2 text-sm dark:border-violet-500/30 dark:bg-violet-500/10"
+                className="space-y-2 rounded-xl border border-white/80 bg-white/60 px-3.5 py-3 text-sm shadow-[inset_0_1px_0_0_oklch(1_0_0)] dark:border-white/10 dark:bg-white/5 dark:shadow-none"
               >
                 <p>
                   AI suggests decision maker: <strong>{DECISION_MAKER_STATUS_LABELS[latest.decision_maker_status]}</strong>{" "}
@@ -180,7 +180,7 @@ export function AiInsightsPanel({ prospectId, prospectName, decisionMakerStatus,
             <CollapsibleContent>
               <ol className="mt-2 space-y-3" aria-label="Previous AI insights" data-testid="ai-insight-history">
                 {previous.map((insight) => (
-                  <li key={insight.id} className="rounded-md border px-3 py-2" data-insight-id={insight.id}>
+                  <li key={insight.id} className="glass-tile rounded-xl px-3 py-2" data-insight-id={insight.id}>
                     <InsightBody insight={insight} timezone={timezone} now={now} compact />
                   </li>
                 ))}

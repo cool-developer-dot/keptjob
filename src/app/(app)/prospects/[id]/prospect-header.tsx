@@ -43,6 +43,7 @@ import {
   type PipelineStage,
 } from "@/lib/constants";
 import { formatMoney } from "@/lib/money";
+import { initials } from "@/lib/pipeline";
 import { formatOrgDate, formatOrgDateTime, timeZoneAbbreviation } from "@/lib/time";
 import { deleteProspect, reassignProspect } from "@/server/actions/prospects";
 import type { ProspectDetail, TeamMember } from "@/server/data/prospect-detail";
@@ -80,7 +81,7 @@ export function ProspectHeader({
   const reason = closeReasonLabel(prospect.stage, prospect.close_reason);
 
   return (
-    <header className="space-y-4">
+    <header className="space-y-5">
       <Link
         href="/prospects"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -90,18 +91,28 @@ export function ProspectHeader({
       </Link>
 
       <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight break-words">{prospect.name}</h1>
-          <p className="text-sm text-muted-foreground">{prospect.company ?? "No company"}</p>
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {prospect.is_stale && <StaleBadge />}
-            {prospect.has_overdue_follow_up && <OverdueBadge />}
+        <div className="flex min-w-0 items-center gap-4">
+          <span
+            aria-hidden
+            className="hidden size-14 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,oklch(0.95_0.012_80),oklch(0.87_0.012_250))] text-lg font-semibold text-[oklch(0.28_0.01_255)] shadow-[inset_0_1px_0_0_oklch(1_0_0/0.8),0_6px_16px_-8px_oklch(0.25_0.01_255/0.35)] sm:flex dark:bg-[linear-gradient(135deg,oklch(0.4_0.006_255),oklch(0.3_0.006_255))] dark:text-white"
+          >
+            {initials(prospect.name)}
+          </span>
+          <div className="min-w-0 space-y-1">
+            <h1 className="text-[1.75rem] leading-tight font-semibold tracking-tight break-words">{prospect.name}</h1>
+            <p className="text-sm text-muted-foreground">{prospect.company ?? "No company"}</p>
+            {(prospect.is_stale || prospect.has_overdue_follow_up) && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {prospect.is_stale && <StaleBadge />}
+                {prospect.has_overdue_follow_up && <OverdueBadge />}
+              </div>
+            )}
           </div>
         </div>
         {isManager && <ProspectActionsMenu prospect={prospect} />}
       </div>
 
-      <div className="grid gap-4 rounded-lg border p-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="glass grid gap-4 rounded-2xl p-5 sm:grid-cols-2 lg:grid-cols-4">
         <StageControl prospect={prospect} />
         <div className="space-y-1.5">
           {isManager ? (
@@ -146,8 +157,8 @@ export function ProspectHeader({
           aria-label="Outcome"
           className={
             prospect.stage === "closed_won"
-              ? "flex gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm dark:border-emerald-500/30 dark:bg-emerald-500/10"
-              : "flex gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm dark:border-red-500/30 dark:bg-red-500/10"
+              ? "flex gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/8 p-4 text-sm dark:border-emerald-500/30 dark:bg-emerald-500/10"
+              : "flex gap-3 rounded-2xl border border-red-500/20 bg-red-500/8 p-4 text-sm dark:border-red-500/30 dark:bg-red-500/10"
           }
         >
           {prospect.stage === "closed_won" ? (

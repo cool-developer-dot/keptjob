@@ -5,7 +5,7 @@ export function KpiTilesSkeleton() {
   return (
     <div aria-busy="true" aria-label="Loading key numbers" className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
       {Array.from({ length: 6 }, (_, tile) => (
-        <div key={tile} className="space-y-2 rounded-xl border p-4">
+        <div key={tile} className="glass space-y-2 rounded-2xl p-4">
           <Skeleton className="h-3 w-20" />
           <Skeleton className="h-7 w-16" />
           <Skeleton className="h-3 w-24" />

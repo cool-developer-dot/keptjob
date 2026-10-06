@@ -76,7 +76,7 @@ export function LogActivityForm({ prospectId }: { prospectId: string }) {
         onSubmit={form.handleSubmit(onSubmit)}
         noValidate
         aria-label="Log activity"
-        className="space-y-4 rounded-lg border bg-muted/30 p-4"
+        className="glass-tile space-y-4 rounded-2xl p-4"
         onKeyDown={(event) => {
           if (event.key === "Escape" && !pending) setOpen(false);
         }}

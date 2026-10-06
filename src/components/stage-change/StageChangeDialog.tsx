@@ -212,7 +212,7 @@ function FollowUpFields<T extends DemoBookedFormValues | DemoAttendedFormValues>
   const c = control as unknown as Control<DemoAttendedFormValues>;
   const createFollowUp = useWatch({ control: c, name: "createFollowUp" });
   return (
-    <fieldset className="space-y-3 rounded-lg border p-3" disabled={disabled}>
+    <fieldset className="glass-tile space-y-3 rounded-2xl p-3.5" disabled={disabled}>
       <legend className="sr-only">Follow-up</legend>
       <CheckboxField control={c} name="createFollowUp" label="Create a follow-up" />
       {createFollowUp ? (

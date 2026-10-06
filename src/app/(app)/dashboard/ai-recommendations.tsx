@@ -27,19 +27,23 @@ export function AiRecommendationsList({
     );
   }
   return (
-    <ul className="-my-3 divide-y" aria-label="Latest AI recommendations">
+    <ul className="flex flex-col gap-3" aria-label="Latest AI recommendations">
       {rows.map((row) => (
-        <li key={row.insightId} className="space-y-1.5 py-3" data-prospect-id={row.prospect.id}>
+        <li
+          key={row.insightId}
+          className="glass-tile relative space-y-2 rounded-2xl p-3.5 transition-colors hover:bg-white/90 dark:hover:bg-white/10"
+          data-prospect-id={row.prospect.id}
+        >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Link
               href={`/prospects/${row.prospect.id}`}
-              className="min-w-0 truncate font-medium underline-offset-4 hover:underline"
+              className="min-w-0 truncate text-sm font-semibold tracking-tight underline-offset-4 after:absolute after:inset-0 after:rounded-2xl hover:underline"
             >
               {row.prospect.name}
             </Link>
             <DealHealthBadge health={row.dealHealth} prefix="AI" />
           </div>
-          <p className="text-sm break-words">{row.nextStep}</p>
+          <p className="line-clamp-3 text-sm break-words text-foreground/85">{row.nextStep}</p>
           <p className="text-xs text-muted-foreground">
             <time dateTime={row.createdAt} title={formatOrgDateTime(row.createdAt, timezone)}>
               {formatRelativeTime(row.createdAt, now)}

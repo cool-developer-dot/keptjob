@@ -16,8 +16,8 @@ const EMPTY: Record<FollowUpPageTab, { title: string; body: string }> = {
 export function FollowUpsEmptyState({ tab }: { tab: FollowUpPageTab }) {
   const { title, body } = EMPTY[tab];
   return (
-    <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed px-6 py-14 text-center">
-      <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
+    <div className="glass flex flex-col items-center justify-center gap-2 rounded-3xl px-6 py-14 text-center">
+      <div className="flex size-11 items-center justify-center rounded-2xl bg-white/80 text-muted-foreground shadow-[inset_0_1px_0_0_oklch(1_0_0)] ring-1 ring-[oklch(0.3_0.01_255/0.08)] dark:bg-white/10 dark:ring-white/10">
         <CalendarCheckIcon aria-hidden className="size-5" />
       </div>
       <h2 className="text-base font-semibold">{title}</h2>

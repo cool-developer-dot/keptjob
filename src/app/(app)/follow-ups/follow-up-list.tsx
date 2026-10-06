@@ -40,7 +40,7 @@ export function FollowUpList({ tab, rows, names, showOwner, currentUserId, today
       {rows.length === 0 ? (
         <FollowUpsEmptyState tab={tab} />
       ) : (
-        <ul aria-label={`${tab} follow-ups`} className="divide-y rounded-lg border">
+        <ul aria-label={`${tab} follow-ups`} className="glass divide-y divide-[oklch(0.3_0.01_255/0.07)] overflow-hidden rounded-2xl dark:divide-white/5">
           {rows.map((row) => {
             const href = `/prospects/${row.prospect.id}`;
             const ownerName = names[row.ownerId] ?? "—";
@@ -48,12 +48,12 @@ export function FollowUpList({ tab, rows, names, showOwner, currentUserId, today
               <li
                 key={row.id}
                 data-follow-up-id={row.id}
-                className="grid gap-3 p-4 md:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_auto] md:items-start md:gap-4"
+                className="grid gap-3 px-5 py-4 transition-colors hover:bg-white/45 md:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_auto] md:items-start md:gap-5 dark:hover:bg-white/5"
               >
                 <div className="min-w-0">
                   <Link
                     href={href}
-                    className="block truncate font-medium hover:underline focus-visible:underline focus-visible:outline-none"
+                    className="block truncate font-semibold tracking-tight hover:underline focus-visible:underline focus-visible:outline-none"
                   >
                     {row.prospect.name}
                   </Link>

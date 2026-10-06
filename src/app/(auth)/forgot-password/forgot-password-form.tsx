@@ -32,14 +32,14 @@ export function ForgotPasswordForm() {
     });
 
   return (
-    <Card>
+    <Card className="glass-strong gap-6 rounded-3xl py-7 [--card-spacing:--spacing(7)]">
       <CardHeader>
-        <CardTitle>Forgot password</CardTitle>
+        <CardTitle className="text-xl">Forgot password</CardTitle>
         <CardDescription>We&rsquo;ll email you a link to set a new password.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {sentTo ? (
-          <p role="status" className="rounded-md bg-muted p-3 text-sm">
+          <p role="status" className="rounded-xl bg-white/60 p-3 text-sm ring-1 ring-[oklch(0.3_0.01_255/0.08)] dark:bg-white/5 dark:ring-white/10">
             If an account exists for <strong>{sentTo}</strong>, a reset link is on its way. Check
             your inbox.
           </p>

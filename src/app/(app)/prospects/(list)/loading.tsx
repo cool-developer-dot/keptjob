@@ -17,7 +17,7 @@ export default function ProspectsLoading() {
           <Skeleton key={i} className="h-9 w-32" />
         ))}
       </div>
-      <div className="space-y-px overflow-hidden rounded-lg border">
+      <div className="glass space-y-px overflow-hidden rounded-2xl">
         <Skeleton className="h-10 w-full rounded-none" />
         {Array.from({ length: 8 }, (_, i) => (
           <div key={i} className="flex items-center gap-4 border-t px-3 py-3">

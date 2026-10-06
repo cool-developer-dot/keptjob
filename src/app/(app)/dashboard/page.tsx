@@ -1,3 +1,4 @@
+import { CalendarClockIcon, HistoryIcon, SirenIcon, SparklesIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
@@ -29,6 +30,9 @@ import { SectionCard } from "@/components/section-card";
 import { KpiTilesSkeleton, SectionSkeleton } from "./skeletons";
 
 export const metadata: Metadata = { title: "Dashboard · AI Sales CRM" };
+
+/** Rows shown per section (the full lists live on the linked pages), keeping the dashboard calm. */
+const VISIBLE = { contactToday: 5, attention: 5, activity: 8 } as const;
 
 /**
  * Dashboard (SPEC §1): who to contact (KPIs + Contact today), last
@@ -81,8 +85,8 @@ export default async function DashboardPage({
         <Suspense fallback={<KpiTilesSkeleton />}>
           <KpiSection {...shared} />
         </Suspense>
-        <div className="grid min-w-0 gap-6 lg:grid-cols-3">
-          <div className="min-w-0 space-y-6 lg:col-span-2">
+        <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+          <div className="min-w-0 space-y-6">
             <Suspense fallback={<SectionSkeleton label="contact today" />}>
               <ContactTodaySection {...shared} />
             </Suspense>
@@ -135,15 +139,18 @@ async function KpiSection({ ctx, owner, today }: SectionProps) {
 async function ContactTodaySection({ ctx, owner, team, showOwner, today, settings, now }: SectionProps) {
   const result = await listContactTodayData(ctx, { ownerId: owner });
   if (!result.ok) throw new Error(result.error);
-  const { rows, total } = result.data;
+  const { total } = result.data;
+  const rows = result.data.rows.slice(0, VISIBLE.contactToday);
   return (
     <SectionCard
       id="contact-today"
       title="Contact today"
+      icon={<CalendarClockIcon />}
+      tone="neutral"
       description={
-        total > rows.length
-          ? `Showing ${rows.length} of ${total} follow-ups due today or overdue, most overdue first.`
-          : "Follow-ups due today or overdue, most overdue first."
+        total === 0
+          ? "Follow-ups due today or overdue"
+          : `${total} follow-up${total === 1 ? "" : "s"} due today or overdue · most overdue first`
       }
       action={{ href: followUpsHref(owner), label: total > rows.length ? `View all ${total}` : "Follow-ups" }}
     >
@@ -162,17 +169,16 @@ async function ContactTodaySection({ ctx, owner, team, showOwner, today, setting
 async function AttentionSection({ ctx, owner, team, showOwner, settings, now }: SectionProps) {
   const result = await listDealsNeedingAttentionData(ctx, { ownerId: owner, limit: DASHBOARD_LIMITS.attention });
   if (!result.ok) throw new Error(result.error);
-  const { rows, total } = result.data;
+  const { total } = result.data;
+  const rows = result.data.rows.slice(0, VISIBLE.attention);
   return (
     <SectionCard
       id="attention"
       title="Deals needing attention"
-      description={
-        total > rows.length
-          ? `Top ${rows.length} of ${total}: overdue follow-up, then stale, then low AI health, then no follow-up.`
-          : "Overdue follow-up, then stale, then low AI health, then no follow-up."
-      }
-      action={{ href: followUpsHref(owner, "attention"), label: "Needs attention" }}
+      icon={<SirenIcon />}
+      tone="red"
+      description={`${total > rows.length ? `Top ${rows.length} of ${total}` : "Ranked"}: overdue, stale, low AI health, no follow-up`}
+      action={{ href: followUpsHref(owner, "attention"), label: total > rows.length ? `View all ${total}` : "Needs attention" }}
     >
       <AttentionList
         rows={rows}
@@ -193,7 +199,9 @@ async function AiSection({ ctx, owner, settings, now }: SectionProps) {
     <SectionCard
       id="ai-recommendations"
       title="Latest AI recommendations"
-      description="Recommended next step per open deal, newest first."
+      icon={<SparklesIcon />}
+      tone="neutral"
+      description="Newest next step per open deal"
     >
       <AiRecommendationsList rows={result.data} timezone={settings.timezone} now={now} />
     </SectionCard>
@@ -204,8 +212,19 @@ async function ActivitySection({ ctx, owner, team, settings, now }: SectionProps
   const result = await listRecentActivityData(ctx, { ownerId: owner });
   if (!result.ok) throw new Error(result.error);
   return (
-    <SectionCard id="recent-activity" title="Recent activity" description="The latest 15 activities.">
-      <RecentActivityFeed rows={result.data} users={team} timezone={settings.timezone} now={now} />
+    <SectionCard
+      id="recent-activity"
+      title="Recent activity"
+      icon={<HistoryIcon />}
+      tone="sky"
+      description="Latest updates across your deals"
+    >
+      <RecentActivityFeed
+        rows={result.data.slice(0, VISIBLE.activity)}
+        users={team}
+        timezone={settings.timezone}
+        now={now}
+      />
     </SectionCard>
   );
 }

@@ -3,9 +3,9 @@ import { CalendarCheckIcon, SparklesIcon } from "lucide-react";
 import Link from "next/link";
 
 import { ObjectionChips, StageBadge } from "@/components/prospects/prospect-badges";
-import { Badge } from "@/components/ui/badge";
 import { DEAL_HEALTH_LABELS } from "@/lib/constants";
 import { dueRelativeLabel } from "@/lib/follow-ups";
+import { initials } from "@/lib/pipeline";
 import { formatDateString, formatOrgDateTime, type DateString } from "@/lib/time";
 import type { ContactTodayRow } from "@/server/data/dashboard";
 
@@ -42,54 +42,91 @@ export function ContactTodayList({
     );
   }
   return (
-    <ul className="-my-3 divide-y" aria-label="Follow-ups due today or overdue">
+    <ul className="flex flex-col gap-3" aria-label="Follow-ups due today or overdue">
       {rows.map((row) => (
-        <li key={row.id} className="space-y-2 py-3" data-follow-up-id={row.id} data-bucket={row.bucket}>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <Link
-              href={`/prospects/${row.prospect.id}`}
-              className="font-medium underline-offset-4 hover:underline"
-            >
-              {row.prospect.name}
-            </Link>
-            {row.prospect.company && <span className="text-sm text-muted-foreground">{row.prospect.company}</span>}
-            <StageBadge stage={row.prospect.stage} />
-            <Badge
-              title={formatDateString(row.dueDate)}
-              className={cn(
-                "border-transparent",
-                row.bucket === "overdue"
-                  ? "bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300"
-                  : "bg-amber-100 text-amber-900 dark:bg-amber-500/15 dark:text-amber-300",
+        <li
+          key={row.id}
+          className="glass-tile group/row relative flex gap-3.5 rounded-2xl p-4 transition-colors hover:bg-white/90 dark:hover:bg-white/10"
+          data-follow-up-id={row.id}
+          data-bucket={row.bucket}
+        >
+          <span
+            aria-hidden
+            className={cn(
+              "flex size-10 shrink-0 items-center justify-center rounded-full text-xs font-semibold shadow-[inset_0_1px_0_0_oklch(1_0_0/0.6)]",
+              row.bucket === "overdue"
+                ? "bg-[linear-gradient(135deg,oklch(0.9_0.06_25),oklch(0.85_0.08_10))] text-red-800"
+                : "bg-[linear-gradient(135deg,oklch(0.93_0.07_85),oklch(0.88_0.09_70))] text-amber-900",
+            )}
+          >
+            {initials(row.prospect.name)}
+          </span>
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="flex flex-wrap items-baseline gap-x-2">
+                  <Link
+                    href={`/prospects/${row.prospect.id}`}
+                    className="font-semibold tracking-tight underline-offset-4 after:absolute after:inset-0 after:rounded-2xl hover:underline"
+                  >
+                    {row.prospect.name}
+                  </Link>
+                  {row.prospect.company && (
+                    <span className="truncate text-sm text-muted-foreground">{row.prospect.company}</span>
+                  )}
+                </p>
+                <p className="mt-0.5 text-sm break-words text-foreground/90">
+                  <span className="sr-only">Follow-up: </span>
+                  {row.note}
+                </p>
+              </div>
+              <span
+                title={formatDateString(row.dueDate)}
+                className={cn(
+                  "shrink-0 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap",
+                  row.bucket === "overdue"
+                    ? "bg-red-500/12 text-red-700 dark:bg-red-500/15 dark:text-red-300"
+                    : "bg-amber-500/15 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300",
+                )}
+              >
+                {dueRelativeLabel(row.dueDate, today)}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+              <StageBadge stage={row.prospect.stage} />
+              {row.prospect.objections.length > 0 && (
+                <>
+                  <span className="sr-only">Objections</span>
+                  <ObjectionChips objections={row.prospect.objections} max={2} />
+                </>
               )}
-            >
-              {dueRelativeLabel(row.dueDate, today)}
-            </Badge>
-            {showOwner && (
-              <span className="text-xs text-muted-foreground">· {names[row.ownerId] ?? "Former user"}</span>
+              {showOwner && <span className="ml-1">· {names[row.ownerId] ?? "Former user"}</span>}
+            </div>
+
+            <div className="[&_[data-snippet]>span]:line-clamp-1">
+              <ConversationSnippetText conversation={row.lastConversation} timezone={timezone} now={now} />
+            </div>
+
+            {row.aiNextStep && (
+              <p
+                className="flex items-start gap-2 rounded-xl bg-[oklch(0.3_0.01_255/0.045)] px-3 py-2 text-xs text-foreground/90 ring-1 ring-[oklch(0.3_0.01_255/0.07)] dark:bg-white/5 dark:ring-white/10"
+                data-ai-next-step
+                title={formatOrgDateTime(row.aiNextStep.createdAt, timezone)}
+              >
+                <SparklesIcon aria-hidden className="mt-px size-3.5 shrink-0 text-muted-foreground" />
+                <span className="line-clamp-2 min-w-0 break-words">
+                  <span className="font-semibold">AI next step</span>
+                  <span className="text-muted-foreground">
+                    {" "}
+                    · {DEAL_HEALTH_LABELS[row.aiNextStep.dealHealth]} health
+                  </span>
+                  {" — "}
+                  {row.aiNextStep.text}
+                </span>
+              </p>
             )}
           </div>
-          <p className="text-sm break-words">
-            <span className="text-muted-foreground">Follow-up:</span> {row.note}
-          </p>
-          {row.prospect.objections.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-              Objections <ObjectionChips objections={row.prospect.objections} max={3} />
-            </div>
-          )}
-          <ConversationSnippetText conversation={row.lastConversation} timezone={timezone} now={now} />
-          {row.aiNextStep && (
-            <p className="flex items-start gap-1.5 text-xs" data-ai-next-step>
-              <SparklesIcon aria-hidden className="mt-0.5 size-3.5 shrink-0 text-violet-600 dark:text-violet-300" />
-              <span className="min-w-0 break-words">
-                <span className="font-medium">AI next step</span>{" "}
-                <span className="text-muted-foreground" title={formatOrgDateTime(row.aiNextStep.createdAt, timezone)}>
-                  ({DEAL_HEALTH_LABELS[row.aiNextStep.dealHealth]} health)
-                </span>
-                : {row.aiNextStep.text}
-              </span>
-            </p>
-          )}
         </li>
       ))}
     </ul>

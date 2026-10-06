@@ -30,15 +30,15 @@ type Props = {
 /** Server-rendered prospects table (sortable headers are links; state lives in the URL). */
 export function ProspectsTable({ rows, params, ownerNames, timezone, staleDays, now }: Props) {
   return (
-    <div className="rounded-lg border">
-      <Table className="min-w-[900px]">
+    <div className="glass overflow-hidden rounded-2xl">
+      <Table className="min-w-[780px] [&_th:first-child]:pl-5 [&_th:last-child]:pr-5">
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             <SortableHead column="name" label="Name" params={params} />
             <SortableHead column="company" label="Company" params={params} />
             <SortableHead column="stage" label="Stage" params={params} />
-            <TableHead className="whitespace-normal">Decision maker</TableHead>
-            <TableHead>Objections</TableHead>
+            <TableHead className="hidden whitespace-normal 2xl:table-cell">Decision maker</TableHead>
+            <TableHead className="hidden 2xl:table-cell">Objections</TableHead>
             <SortableHead column="follow_up" label="Next follow-up" params={params} />
             {ownerNames && <TableHead>Owner</TableHead>}
             <SortableHead column="last_activity" label="Last activity" params={params} />
@@ -50,26 +50,30 @@ export function ProspectsTable({ rows, params, ownerNames, timezone, staleDays, 
             const href = `/prospects/${row.id}`;
             return (
               <ProspectRowLink key={row.id} href={href}>
-                <TableCell className="max-w-52">
+                <TableCell className="max-w-56 pl-5">
                   <Link
                     href={href}
                     className="block truncate font-medium hover:underline focus-visible:underline focus-visible:outline-none"
                   >
                     {row.name}
                   </Link>
-                  {row.email && <span className="block truncate text-xs text-muted-foreground">{row.email}</span>}
+                  {row.email && (
+                    <span className="block truncate text-xs text-muted-foreground" title={row.email}>
+                      {row.email}
+                    </span>
+                  )}
                 </TableCell>
-                <TableCell className="max-w-40 truncate">
+                <TableCell className="max-w-44 truncate text-muted-foreground">
                   {row.company ?? <span className="text-muted-foreground">—</span>}
                 </TableCell>
                 <TableCell>
                   <StageBadge stage={row.stage} />
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden 2xl:table-cell">
                   <DecisionMakerLabel status={row.decision_maker_status} />
                 </TableCell>
-                <TableCell>
-                  <ObjectionChips objections={row.objections} max={2} className="flex-nowrap" />
+                <TableCell className="hidden 2xl:table-cell">
+                  <ObjectionChips objections={row.objections} max={1} className="flex-nowrap" />
                 </TableCell>
                 <TableCell>
                   <FollowUpBadge dueDate={row.follow_up_date} timezone={timezone} now={now} />
@@ -88,7 +92,7 @@ export function ProspectsTable({ rows, params, ownerNames, timezone, staleDays, 
                     {row.is_stale && <StaleBadge staleDays={staleDays} />}
                   </span>
                 </TableCell>
-                <TableCell className="text-right tabular-nums">
+                <TableCell className="pr-5 text-right font-medium tabular-nums">
                   {formatMoney(row.deal_value, row.currency)}
                 </TableCell>
               </ProspectRowLink>

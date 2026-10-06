@@ -31,14 +31,14 @@ export function LoginForm({ next, linkError }: { next: string | null; linkError:
     });
 
   return (
-    <Card>
+    <Card className="glass-strong gap-6 rounded-3xl py-7 [--card-spacing:--spacing(7)]">
       <CardHeader>
-        <CardTitle>Log in</CardTitle>
-        <CardDescription>Use your work email and password.</CardDescription>
+        <CardTitle className="text-xl">Welcome back</CardTitle>
+        <CardDescription>Log in with your work email and password.</CardDescription>
       </CardHeader>
       <CardContent>
         {linkError && (
-          <p role="alert" className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+          <p role="alert" className="mb-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
             This link is invalid or has expired. Request a new one with &ldquo;Forgot password?&rdquo;
             or ask your manager for a new invite.
           </p>
@@ -79,7 +79,7 @@ export function LoginForm({ next, linkError }: { next: string | null; linkError:
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={pending}>
+            <Button type="submit" size="lg" className="w-full" disabled={pending}>
               {pending ? "Logging in…" : "Log in"}
             </Button>
           </form>

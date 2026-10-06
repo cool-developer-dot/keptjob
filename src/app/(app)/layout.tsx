@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { MobileNav } from "@/components/app-shell/mobile-nav";
+import { BrandLockup } from "@/components/brand/brand-mark";
 import { NavLinks, type NavBadges } from "@/components/app-shell/nav-links";
 import { UserMenu } from "@/components/app-shell/user-menu";
 import { OrgSettingsProvider } from "@/components/org-settings-provider";
@@ -26,26 +27,28 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     },
   };
 
+  const userMenu = <UserMenu user={user} />;
+
   return (
     <OrgSettingsProvider value={orgSettings}>
-      <div className="flex min-h-svh w-full">
-        <aside className="sticky top-0 hidden h-svh w-60 shrink-0 flex-col gap-6 border-r bg-muted/30 p-4 md:flex">
-          <Link href="/dashboard" className="px-3 text-base font-semibold tracking-tight">
-            AI Sales CRM
+      <div className="flex min-h-svh w-full md:gap-5 md:p-4">
+        <aside className="glass sticky top-4 hidden h-[calc(100svh-2rem)] w-68 shrink-0 flex-col gap-7 rounded-3xl p-4 md:flex">
+          <Link href="/dashboard" className="rounded-xl px-1.5 pt-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+            <BrandLockup subtitle="Sales workspace" />
           </Link>
           <NavLinks role={user.role} badges={badges} />
+          <div className="mt-auto">{userMenu}</div>
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background/95 px-4 backdrop-blur md:px-6">
-            <div className="flex items-center gap-2">
-              <MobileNav role={user.role} badges={badges} />
-              <span className="hidden font-semibold tracking-tight whitespace-nowrap sm:inline md:hidden">
-                AI Sales CRM
-              </span>
-            </div>
-            <UserMenu user={user} />
+          <header className="glass sticky top-3 z-20 mx-3 mt-3 flex h-14 items-center gap-2 rounded-2xl px-2 md:hidden">
+            <MobileNav role={user.role} badges={badges} footer={userMenu} />
+            <Link href="/dashboard" className="min-w-0 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+              <BrandLockup />
+            </Link>
           </header>
-          <main className="flex-1 p-4 md:p-6">{children}</main>
+          <main className="flex-1 px-4 pt-7 pb-12 md:px-3 md:pt-6">
+            <div className="mx-auto w-full max-w-[1440px]">{children}</div>
+          </main>
         </div>
       </div>
     </OrgSettingsProvider>

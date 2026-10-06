@@ -109,7 +109,7 @@ function Tile({
   small?: boolean;
 }) {
   return (
-    <div data-kpi={id} className="flex min-w-0 flex-col gap-1.5 rounded-xl border bg-card p-4 text-card-foreground shadow-xs">
+    <div data-kpi={id} className="glass flex min-w-0 flex-col gap-1.5 rounded-2xl p-4 text-card-foreground">
       <span className="flex items-center justify-between gap-2 text-xs font-medium text-muted-foreground">
         <span className="truncate">{label}</span>
         {tone === "critical" ? (

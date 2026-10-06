@@ -3,14 +3,15 @@
 import { MenuIcon } from "lucide-react";
 import { useState } from "react";
 
+import { BrandLockup } from "@/components/brand/brand-mark";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import type { Role } from "@/lib/constants";
 
 import { NavLinks, type NavBadges } from "./nav-links";
 
-/** Below `md`: the sidebar collapses into a left sheet. */
-export function MobileNav({ role, badges }: { role: Role; badges?: NavBadges }) {
+/** Below `md`: the sidebar collapses into a left sheet; `footer` holds the user card. */
+export function MobileNav({ role, badges, footer }: { role: Role; badges?: NavBadges; footer?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const hasBadge = Object.values(badges ?? {}).some((badge) => (badge?.count ?? 0) > 0);
 
@@ -24,11 +25,16 @@ export function MobileNav({ role, badges }: { role: Role; badges?: NavBadges }) 
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-64 p-4">
-        <SheetHeader className="p-0">
-          <SheetTitle>AI Sales CRM</SheetTitle>
+      <SheetContent side="left" className="w-72 gap-7 rounded-r-3xl p-4">
+        <SheetHeader className="p-0 pt-1">
+          <SheetTitle asChild>
+            <div>
+              <BrandLockup subtitle="Sales workspace" />
+            </div>
+          </SheetTitle>
         </SheetHeader>
         <NavLinks role={role} badges={badges} onNavigate={() => setOpen(false)} />
+        {footer && <div className="mt-auto">{footer}</div>}
       </SheetContent>
     </Sheet>
   );
