@@ -31,7 +31,6 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files: never commit secrets; only the template is tracked
-.env*
 !.env.example
 
 # vercel
@@ -50,3 +49,4 @@ next-env.d.ts
 # supabase
 supabase/.branches
 supabase/.temp
+config.bat

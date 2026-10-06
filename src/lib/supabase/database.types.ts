@@ -382,6 +382,21 @@ isOneToOne: false
               "lost": number,"won": number
             }[]
                            },
+"dashboard_daily_activity":
+{ Args: { "p_days"?: number,"p_owner_id"?: string }; Returns: {
+              "activity_count": number,"day": string
+            }[]
+                           },
+"dashboard_team_summary":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "lost_count": number,"open_count": number,"overdue_count": number,"stale_count": number,"user_id": string,"won_count": number
+            }[]
+                           },
+"dashboard_weekly_flow":
+{ Args: { "p_owner_id"?: string,"p_weeks"?: number }; Returns: {
+              "created_count": number,"week_end": string,"week_start": string,"won_count": number
+            }[]
+                           },
 "follow_up_bucket":
 { Args: { "p_completed_at": string,"p_due_date": string,"p_now": string,"p_status": Database["public"]['Enums']["follow_up_status"],"p_timezone": string }; Returns: string
                            },

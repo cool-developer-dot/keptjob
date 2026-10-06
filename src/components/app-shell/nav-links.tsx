@@ -34,7 +34,7 @@ export function NavLinks({ role, badges, onNavigate }: { role: Role; badges?: Na
             )}
           >
             <Icon
-              className={cn("size-[1.1rem] transition-colors", active ? "text-foreground" : "group-hover:text-foreground")}
+              className={cn("size-[1.1rem] transition-colors", active ? "text-primary" : "group-hover:text-foreground")}
               aria-hidden
             />
             {label}

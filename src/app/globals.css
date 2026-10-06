@@ -57,8 +57,8 @@
   --card-foreground: oklch(0.2 0.008 255);
   --popover: oklch(0.995 0.002 250 / 0.86);
   --popover-foreground: oklch(0.2 0.008 255);
-  --primary: oklch(0.23 0.008 255);
-  --primary-foreground: oklch(0.985 0.002 250);
+  --primary: oklch(0.45 0.1 155);
+  --primary-foreground: oklch(0.985 0.01 155);
   --secondary: oklch(0.93 0.004 255 / 0.7);
   --secondary-foreground: oklch(0.25 0.008 255);
   --muted: oklch(0.92 0.004 255 / 0.55);
@@ -68,7 +68,7 @@
   --destructive: oklch(0.577 0.215 27.325);
   --border: oklch(0.3 0.01 255 / 0.1);
   --input: oklch(0.3 0.01 255 / 0.16);
-  --ring: oklch(0.55 0.012 255);
+  --ring: oklch(0.55 0.1 155);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -80,8 +80,8 @@
   --radius: 0.75rem;
   --sidebar: oklch(1 0 0 / 0.55);
   --sidebar-foreground: oklch(0.2 0.008 255);
-  --sidebar-primary: oklch(0.23 0.008 255);
-  --sidebar-primary-foreground: oklch(0.985 0.002 250);
+  --sidebar-primary: oklch(0.45 0.1 155);
+  --sidebar-primary-foreground: oklch(0.985 0.01 155);
   --sidebar-accent: oklch(1 0 0 / 0.75);
   --sidebar-accent-foreground: oklch(0.2 0.008 255);
   --sidebar-border: oklch(1 0 0 / 0.7);
@@ -99,6 +99,18 @@
   --glass-shadow-lg: 0 2px 6px oklch(0.25 0.01 255 / 0.06), 0 28px 60px -20px oklch(0.25 0.01 255 / 0.3);
   --glass-blur: 22px;
 
+  /* Brand: deep forest green (hero tiles, focus card) + chart series validated
+     with the dataviz palette validator (light + dark): won / lost / created. */
+  --brand: oklch(0.45 0.1 155);
+  --brand-deep: oklch(0.31 0.065 158);
+  --brand-deeper: oklch(0.24 0.05 160);
+  --brand-soft: oklch(0.93 0.04 155);
+  --viz-won: #2f9461;
+  --viz-lost: #c4683f;
+  --viz-created: #3a78c9;
+  --viz-track: oklch(0.3 0.01 255 / 0.07);
+  --viz-hatch: oklch(0.3 0.01 255 / 0.16);
+
   /* Ambient canvas behind the glass: steel, sand, sage, blush — low chroma, calm. */
   --aurora-1: oklch(0.86 0.045 235 / 0.6);
   --aurora-2: oklch(0.9 0.05 75 / 0.6);
@@ -114,8 +126,8 @@
   --card-foreground: oklch(0.96 0.003 255);
   --popover: oklch(0.23 0.006 255 / 0.88);
   --popover-foreground: oklch(0.96 0.003 255);
-  --primary: oklch(0.96 0.003 255);
-  --primary-foreground: oklch(0.2 0.006 255);
+  --primary: oklch(0.74 0.13 155);
+  --primary-foreground: oklch(0.2 0.03 158);
   --secondary: oklch(1 0 0 / 0.08);
   --secondary-foreground: oklch(0.96 0.003 255);
   --muted: oklch(1 0 0 / 0.07);
@@ -125,21 +137,30 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 0.1);
   --input: oklch(1 0 0 / 0.15);
-  --ring: oklch(0.7 0.01 255);
+  --ring: oklch(0.74 0.13 155);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --viz-series-1: #3987e5;
+  --brand: oklch(0.74 0.13 155);
+  --brand-deep: oklch(0.33 0.07 158);
+  --brand-deeper: oklch(0.25 0.05 160);
+  --brand-soft: oklch(0.3 0.05 155);
+  --viz-won: #3fa771;
+  --viz-lost: #d27a52;
+  --viz-created: #5b93dc;
+  --viz-track: oklch(1 0 0 / 0.07);
+  --viz-hatch: oklch(1 0 0 / 0.16);
   --sidebar: oklch(0.26 0.006 255 / 0.45);
   --sidebar-foreground: oklch(0.96 0.003 255);
-  --sidebar-primary: oklch(0.96 0.003 255);
-  --sidebar-primary-foreground: oklch(0.2 0.006 255);
+  --sidebar-primary: oklch(0.74 0.13 155);
+  --sidebar-primary-foreground: oklch(0.2 0.03 158);
   --sidebar-accent: oklch(1 0 0 / 0.1);
   --sidebar-accent-foreground: oklch(0.96 0.003 255);
   --sidebar-border: oklch(1 0 0 / 0.1);
-  --sidebar-ring: oklch(0.7 0.01 255);
+  --sidebar-ring: oklch(0.74 0.13 155);
 
   --glass-bg: oklch(0.27 0.006 255 / 0.42);
   --glass-bg-strong: oklch(0.23 0.006 255 / 0.8);
@@ -234,9 +255,110 @@
       radial-gradient(40rem 36rem at 5% 100%, var(--aurora-4), transparent 60%);
   }
   ::selection {
-    background-color: oklch(0.3 0.01 255 / 0.15);
+    background-color: oklch(0.45 0.1 155 / 0.18);
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* Deep-green hero surface with fine contour lines (dashboard hero tile, focus card). */
+@utility brand-surface {
+  color: oklch(0.98 0.01 155);
+  background-color: var(--brand-deep);
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='560' height='360' viewBox='0 0 560 360' fill='none' stroke='white' stroke-opacity='0.09' stroke-width='1'><path d='M-20 300C80 240 140 330 250 270S420 150 600 210'/><path d='M-20 276C84 214 150 306 256 246S424 126 600 186'/><path d='M-20 252C88 188 160 282 262 222S428 102 600 162'/><path d='M-20 228C92 162 170 258 268 198S432 78 600 138'/><path d='M-20 204C96 136 180 234 274 174S436 54 600 114'/><path d='M-20 180C100 110 190 210 280 150S440 30 600 90'/><path d='M-20 156C104 84 200 186 286 126S444 6 600 66'/><path d='M-20 132C108 58 210 162 292 102S448 -18 600 42'/><path d='M-20 108C112 32 220 138 298 78S452 -42 600 18'/><path d='M-20 324C76 266 130 354 244 294S416 174 600 234'/><path d='M-20 348C72 292 120 378 238 318S412 198 600 258'/></svg>"),
+    radial-gradient(120% 90% at 100% 0%, oklch(0.42 0.09 155 / 0.9), transparent 60%),
+    linear-gradient(160deg, var(--brand-deep), var(--brand-deeper));
+  background-size: cover, auto, auto;
+  background-position: center;
+  box-shadow:
+    inset 0 1px 0 0 oklch(1 0 0 / 0.14),
+    0 18px 40px -18px oklch(0.25 0.06 158 / 0.65);
+}
+
+/* Diagonal hatch used for empty tracks (no activity, still-open share of the gauge). */
+@utility hatch {
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--viz-hatch) 0 1.5px,
+    transparent 1.5px 7px
+  );
+}
+
+@keyframes grow-up {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes grow-right {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .anim-grow-up {
+    transform-origin: 50% 100%;
+    animation: grow-up 900ms cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms) both;
+  }
+  .anim-grow-right {
+    transform-origin: 0 50%;
+    animation: grow-right 900ms cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms) both;
+  }
+  .anim-rise {
+    animation: rise-in 700ms cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms) both;
+  }
+}
+
+@keyframes gauge-draw {
+  from {
+    stroke-dasharray: 0 1000;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .anim-gauge {
+    animation: gauge-draw 1.3s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms) both;
+  }
+}
+
+/* CSS-only count-up for KPI numbers (CountUp component). */
+@property --num {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
+.count-up {
+  --num: var(--to);
+  counter-reset: num var(--num);
+  font-variant-numeric: proportional-nums;
+}
+.count-up::after {
+  content: counter(num);
+}
+@keyframes count-up {
+  from {
+    --num: 0;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .count-up {
+    animation: count-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 }

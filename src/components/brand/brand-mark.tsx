@@ -1,13 +1,13 @@
 import { cn } from "cn";
 import { ChartNoAxesColumnIncreasingIcon } from "lucide-react";
 
-/** App logo: a glossy graphite tile with a rising-bars glyph. */
+/** App logo: a glossy forest-green tile with a rising-bars glyph. */
 export function BrandMark({ className }: { className?: string }) {
   return (
     <span
       aria-hidden
       className={cn(
-        "relative inline-flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[linear-gradient(150deg,oklch(0.42_0.008_255),oklch(0.2_0.008_255))] text-white shadow-[inset_0_1px_0_0_oklch(1_0_0/0.3),0_8px_20px_-10px_oklch(0.2_0.01_255/0.7)] dark:bg-[linear-gradient(150deg,oklch(1_0_0),oklch(0.86_0.004_255))] dark:text-[oklch(0.2_0.008_255)]",
+        "relative inline-flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[linear-gradient(150deg,oklch(0.52_0.11_155),oklch(0.3_0.065_158))] text-white shadow-[inset_0_1px_0_0_oklch(1_0_0/0.3),0_8px_20px_-10px_oklch(0.3_0.07_158/0.7)]",
         className,
       )}
     >
