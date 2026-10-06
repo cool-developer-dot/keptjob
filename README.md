@@ -92,6 +92,8 @@ Never prefix a secret with `NEXT_PUBLIC_` (those values are inlined into the bro
 
 ## Tests
 
+> **CI (GitHub Actions)** is stored at `.github/ci.yml` and is **inactive**. To enable it, move it to `.github/workflows/ci.yml`: rename it in the GitHub web UI, or push the move from a machine whose GitHub token has the `workflow` scope (`gh auth refresh -h github.com -s workflow`).
+
 | Command | Needs | Covers |
 |---|---|---|
 | `npm run test` (part of `verify`) | nothing | Unit tests (Vitest) |

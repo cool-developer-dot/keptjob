@@ -1,0 +1,88 @@
+name: CI
+
+# No secrets needed: unit checks run without env, and the Supabase job uses a
+# throwaway local stack (Docker) with its well-known local demo keys.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Typecheck, lint, unit tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build
+
+  supabase:
+    name: Database, integration and e2e tests (local Supabase)
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SUPABASE_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Start local Supabase (applies migrations + seed)
+        run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,storage-api
+
+      - name: Write .env.local from the local stack
+        run: |
+          eval "$(npx supabase status -o env)"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+            echo "NEXT_PUBLIC_SITE_URL=http://localhost:3000"
+          } > .env.local
+
+      - name: pgTAP database tests
+        run: npm run test:db
+
+      - name: Integration tests (data layer through RLS)
+        run: |
+          psql --version
+          npm run test:integration
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: npm run e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+      - name: Stop Supabase
+        if: always()
+        run: npx supabase stop --no-backup
