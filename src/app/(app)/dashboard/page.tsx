@@ -1,10 +1,21 @@
-import { CalendarClockIcon, HistoryIcon, SirenIcon, SparklesIcon } from "lucide-react";
+import {
+  ActivityIcon,
+  CalendarClockIcon,
+  ChartSplineIcon,
+  GaugeIcon,
+  HistoryIcon,
+  LayersIcon,
+  SirenIcon,
+  SparklesIcon,
+  UsersRoundIcon,
+} from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { PageHeader } from "@/components/app-shell/page-header";
 import { requireUser } from "@/lib/auth";
 import { DASHBOARD_LIMITS, firstName, greetingFor } from "@/lib/dashboard";
+import { activityWeekOverWeek } from "@/lib/dashboard-charts";
 import { getOrgSettings } from "@/lib/org";
 import type { OrgSettings } from "@/lib/org-settings";
 import { createClient } from "@/lib/supabase/server";
@@ -18,16 +29,23 @@ import {
   listLatestAiRecommendationsData,
   listRecentActivityData,
 } from "@/server/data/dashboard";
+import { getDashboardChartsData } from "@/server/data/dashboard-charts";
 import { listTeamData, type TeamMember } from "@/server/data/prospect-detail";
 
 import { AiRecommendationsList } from "./ai-recommendations";
+import { ActivityPills } from "./charts/activity-pills";
+import { DealFlowChart } from "./charts/deal-flow-chart";
+import { FocusCard } from "./charts/focus-card";
+import { OutcomeGauge } from "./charts/outcome-gauge";
+import { StageBars } from "./charts/stage-bars";
+import { TeamCards } from "./charts/team-cards";
 import { AttentionList } from "./attention-list";
 import { ContactTodayList } from "./contact-today";
 import { KpiTiles } from "./kpi-tiles";
 import { DashboardOwnerFilter } from "./owner-filter";
 import { RecentActivityFeed } from "./recent-activity";
 import { SectionCard } from "@/components/section-card";
-import { KpiTilesSkeleton, SectionSkeleton } from "./skeletons";
+import { ChartsSkeleton, KpiTilesSkeleton, SectionSkeleton } from "./skeletons";
 
 export const metadata: Metadata = { title: "Dashboard · AI Sales CRM" };
 
@@ -82,8 +100,15 @@ export default async function DashboardPage({
         actions={isManager ? <DashboardOwnerFilter owner={owner} owners={team.data} /> : undefined}
       />
       <div className="space-y-6" key={owner ?? "all"}>
-        <Suspense fallback={<KpiTilesSkeleton />}>
-          <KpiSection {...shared} />
+        <Suspense
+          fallback={
+            <>
+              <KpiTilesSkeleton />
+              <ChartsSkeleton />
+            </>
+          }
+        >
+          <InsightsSection {...shared} />
         </Suspense>
         <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
           <div className="min-w-0 space-y-6">
@@ -130,10 +155,90 @@ function followUpsHref(owner: string | null, tab?: string): string {
   return query ? `/follow-ups?${query}` : "/follow-ups";
 }
 
-async function KpiSection({ ctx, owner, today }: SectionProps) {
-  const result = await getDashboardKpisData(ctx, { ownerId: owner, today });
-  if (!result.ok) throw new Error(result.error);
-  return <KpiTiles kpis={result.data} owner={owner} />;
+/** KPI tiles + charts: one round of parallel queries feeds every number at the top. */
+async function InsightsSection({ ctx, owner, today }: SectionProps) {
+  const [kpis, charts] = await Promise.all([
+    getDashboardKpisData(ctx, { ownerId: owner, today }),
+    getDashboardChartsData(ctx, { ownerId: owner }),
+  ]);
+  if (!kpis.ok) throw new Error(kpis.error);
+  if (!charts.ok) throw new Error(charts.error);
+  const { activity, flow, stages, team } = charts.data;
+  const week = activityWeekOverWeek(activity);
+  const ownerQuery = owner ? `?owner=${owner}` : "";
+
+  return (
+    <>
+      <KpiTiles kpis={kpis.data} owner={owner} />
+
+      <div className="grid min-w-0 gap-6 md:grid-cols-2 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_minmax(0,1fr)]">
+        <SectionCard
+          id="activity-chart"
+          title="Activity this week"
+          icon={<ActivityIcon />}
+          tone="emerald"
+          description={`${week.thisWeek} calls, notes, demos and moves${
+            week.changePct === null ? "" : ` · ${week.changePct >= 0 ? "+" : ""}${week.changePct}% vs last week`
+          }`}
+        >
+          <ActivityPills points={activity} />
+        </SectionCard>
+        <SectionCard
+          id="outcomes-chart"
+          title="Deal outcomes"
+          icon={<GaugeIcon />}
+          tone="emerald"
+          description="Deals closed in the last 90 days: won vs lost"
+        >
+          <OutcomeGauge won={kpis.data.winRate.won} lost={kpis.data.winRate.lost} open={kpis.data.openProspects} />
+        </SectionCard>
+        <div className="min-w-0 md:col-span-2 xl:col-span-1">
+          <FocusCard
+            dueToday={kpis.data.dueToday}
+            overdue={kpis.data.overdue}
+            stale={kpis.data.stale}
+            followUpsHref={followUpsHref(owner, kpis.data.overdue > 0 ? undefined : "today")}
+            pipelineHref={`/pipeline${ownerQuery}`}
+          />
+        </div>
+      </div>
+
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+        <SectionCard
+          id="deal-flow"
+          title="Deal flow"
+          icon={<ChartSplineIcon />}
+          tone="sky"
+          description="New prospects vs deals won, per week (last 8 weeks)"
+          action={{ href: "/reports", label: "Reports" }}
+        >
+          <DealFlowChart data={flow} />
+        </SectionCard>
+        <SectionCard
+          id="stage-chart"
+          title="Open deals by stage"
+          icon={<LayersIcon />}
+          tone="neutral"
+          description="Where the pipeline sits right now"
+          action={{ href: `/pipeline${ownerQuery}`, label: "Pipeline" }}
+        >
+          <StageBars stages={stages} />
+        </SectionCard>
+      </div>
+
+      {team && team.length > 0 && (
+        <SectionCard
+          id="team"
+          title="Team"
+          icon={<UsersRoundIcon />}
+          tone="neutral"
+          description="Open deals, wins in the last 90 days and who has follow-ups slipping"
+        >
+          <TeamCards team={team} />
+        </SectionCard>
+      )}
+    </>
+  );
 }
 
 async function ContactTodaySection({ ctx, owner, team, showOwner, today, settings, now }: SectionProps) {

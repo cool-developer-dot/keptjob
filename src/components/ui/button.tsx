@@ -9,7 +9,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-[linear-gradient(180deg,oklch(0.36_0.008_255),oklch(0.21_0.008_255))] text-primary-foreground shadow-[inset_0_1px_0_0_oklch(1_0_0/0.18),0_6px_16px_-8px_oklch(0.2_0.01_255/0.55)] hover:bg-[linear-gradient(180deg,oklch(0.42_0.008_255),oklch(0.26_0.008_255))] dark:bg-[linear-gradient(180deg,oklch(1_0_0),oklch(0.9_0.004_255))] dark:hover:bg-[linear-gradient(180deg,oklch(1_0_0),oklch(0.95_0.004_255))]",
+          "bg-[linear-gradient(180deg,oklch(0.53_0.11_155),oklch(0.41_0.095_156))] text-primary-foreground shadow-[inset_0_1px_0_0_oklch(1_0_0/0.22),0_6px_16px_-8px_oklch(0.35_0.09_155/0.6)] hover:bg-[linear-gradient(180deg,oklch(0.57_0.11_155),oklch(0.45_0.1_156))] dark:bg-[linear-gradient(180deg,oklch(0.78_0.12_155),oklch(0.7_0.13_155))] dark:hover:bg-[linear-gradient(180deg,oklch(0.82_0.11_155),oklch(0.74_0.12_155))]",
         outline:
           "border-white/80 bg-white/60 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.9),0_1px_2px_oklch(0.25_0.01_255/0.06)] backdrop-blur-md hover:bg-white/85 hover:text-foreground aria-expanded:bg-white/85 aria-expanded:text-foreground dark:border-white/10 dark:bg-white/5 dark:shadow-none dark:hover:bg-white/10",
         secondary:

@@ -28,7 +28,7 @@ export function UserMenu({ user }: { user: CurrentUser }) {
           className={cn(
             "w-fit rounded-full px-1.5 text-[0.7rem] leading-4 font-medium",
             isManager
-              ? "bg-[oklch(0.23_0.008_255)] text-white dark:bg-white dark:text-[oklch(0.2_0.008_255)]"
+              ? "bg-primary text-primary-foreground"
               : "bg-[oklch(0.3_0.01_255/0.07)] text-muted-foreground dark:bg-white/10",
           )}
         >
