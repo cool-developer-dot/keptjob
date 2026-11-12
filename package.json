@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node init && next dev",
-    "build": "node init && next build",
-    "start": "node init && next start",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -18,7 +18,7 @@
     "create-manager": "node scripts/create-manager.mts",
     "create-user": "node scripts/create-manager.mts",
     "demo-data": "node scripts/demo-data.mts",
-    "start:cloud": "node init && next build && next start -p 3001",
+    "start:cloud": "next build && next start -p 3001",
     "db:setup-sql": "node scripts/build-setup-sql.mts"
   },
   "dependencies": {

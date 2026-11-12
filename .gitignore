@@ -49,4 +49,7 @@ next-env.d.ts
 # supabase
 supabase/.branches
 supabase/.temp
-config.bat
+
+# local env files (restored after the 2026-11 malware cleanup)
+.env
+.env.*
